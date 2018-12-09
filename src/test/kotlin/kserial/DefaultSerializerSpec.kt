@@ -8,6 +8,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.should.shouldMatch
 import kserial.DefaultSerializerSpec.testCases
 import kserial.SharingMode.ShareSame
+import kserial.internal.BinaryInput
+import kserial.internal.BinaryOutput
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.*
 import java.io.ByteArrayOutputStream

@@ -4,6 +4,8 @@
 
 package kserial
 
+import kserial.internal.BinaryInput
+import kserial.internal.BinaryOutput
 import java.io.ByteArrayOutputStream
 
 data class Car(val engine: Engine, val brand: Brand) {

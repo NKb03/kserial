@@ -4,14 +4,13 @@
 
 @file:Suppress("UNCHECKED_CAST")
 
-package kserial
+package kserial.internal
 
+import kserial.*
 import kserial.SharingMode.Unshared
 import kserial.internal.PrefixByte.NULL
 import kserial.internal.PrefixByte.byte
 import java.io.*
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -137,11 +136,6 @@ class BinaryOutput(
     companion object {
         fun toStream(stream: OutputStream, sharingMode: SharingMode = Unshared, shareClassNames: Boolean = true) =
             BinaryOutput(DataOutputStream(stream), sharingMode, shareClassNames)
-
-        fun toFile(path: Path, sharingMode: SharingMode = Unshared, shareClassNames: Boolean = true): BinaryOutput {
-            val stream = runIO("getting output stream") { Files.newOutputStream(path) }
-            return BinaryOutput.toStream(stream, sharingMode, shareClassNames)
-        }
 
         val logger: Logger = Logger.getLogger(BinaryOutput::class.java.name)
 
