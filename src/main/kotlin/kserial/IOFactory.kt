@@ -4,8 +4,7 @@
 
 package kserial
 
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 
 interface IOFactory {
     fun createInput(stream: InputStream): Input
@@ -18,3 +17,8 @@ interface IOFactory {
         override fun createOutput(stream: OutputStream): Output = BinaryOutput.toStream(stream)
     }
 }
+
+fun IOFactory.createInput(file: File) = createInput(FileInputStream(file))
+
+fun IOFactory.createOutput(file: File) = createOutput(FileOutputStream(file))
+
