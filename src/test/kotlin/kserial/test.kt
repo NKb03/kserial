@@ -63,3 +63,7 @@ data class B(val i: Int = 5) {
 }
 
 data class A(val i: Int = 10, val b: B = B())
+
+data class X(val i: Int) {
+    val x = this
+}

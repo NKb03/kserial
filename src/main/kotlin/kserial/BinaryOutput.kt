@@ -7,25 +7,25 @@
 package kserial
 
 import kserial.SharingMode.Unshared
-import kserial.internal.Constants
-import kserial.internal.Constants.SHARING
+import kserial.internal.PrefixByte.NULL
+import kserial.internal.PrefixByte.byte
 import java.io.*
-import java.lang.AssertionError
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class BinaryOutput(private val out: DataOutput, sharingMode: SharingMode = Unshared) : Output {
+class BinaryOutput(
+    private val out: DataOutput,
+    sharingMode: SharingMode = Unshared,
+    private val shareClassNames: Boolean = true
+) : Output {
     private val cache = sharingMode.createCache()
 
-    override fun writeNull() = runIO("writing null") {
-        out.writeByte(Constants.NULL.toInt())
-    }
+    private val clsNameCache = HashMap<String, Int>()
 
-    override fun writeClass(cls: Class<*>) = runIO("writing object start") {
-        out.writeByte(Constants.OBJECT_START.toInt())
-        out.writeUTF(cls.name)
+    override fun writeNull() = runIO("writing null") {
+        writeByte(NULL)
     }
 
     override fun writeByte(byte: Byte) = runIO("writing byte") {
@@ -60,26 +60,69 @@ class BinaryOutput(private val out: DataOutput, sharingMode: SharingMode = Unsha
         out.writeUTF(str)
     }
 
-    override fun writeObject(obj: Any?, context: SerialContext, typed: Boolean) {
+    override fun writeObject(obj: Any?, context: SerialContext, untyped: Boolean) {
         val cachedId = cache?.get(obj)
         when {
             obj == null      -> writeNull()
-            cachedId != null -> writeCachedId(cachedId)
-            else             -> writeNew(obj, context, typed)
+            cachedId != null -> writeObjectRef(cachedId)
+            else             -> writeObjectNotNull(obj, untyped, context)
         }
     }
 
-    private fun writeNew(obj: Any, context: SerialContext, typed: Boolean) {
-        registerCache(obj)
-        implWriteObject(obj, typed, context)
+    private fun writeObjectNotNull(
+        obj: Any,
+        untyped: Boolean,
+        context: SerialContext
+    ) {
+        val name = obj.javaClass.name
+        val clsId = clsNameCache[name]
+        writePrefix(untyped, clsId)
+        shareObject(obj)
+        if (!untyped) writeClass(clsId, name)
+        implWriteObject(obj, context)
     }
 
-    private fun implWriteObject(obj: Any, typed: Boolean, context: SerialContext) {
-        val cls = obj.javaClass
-        if (typed) {
-            writeString(cls.name)
+    private fun writePrefix(untyped: Boolean, clsId: Int?) {
+        val clsRef = clsId != null
+        val prefix = byte(
+            share = cache != null,
+            untyped = untyped,
+            clsShare = shareClassNames && !clsRef,
+            clsRef = clsRef
+        )
+        writeByte(prefix)
+    }
+
+    private fun writeClass(clsId: Int?, name: String) {
+        if (clsId != null) writeInt(clsId)
+        else {
+            writeString(name)
+            shareClass(name)
         }
-        val serializer = context.getSerializer(cls.kotlin)
+    }
+
+    private fun shareClass(name: String) {
+        if (shareClassNames) {
+            val id = clsNameCache.size
+            clsNameCache[name] = id
+        }
+    }
+
+    private fun shareObject(obj: Any) {
+        cache?.run {
+            val id = size
+            writeInt(id)
+            cache[obj] = id
+        }
+    }
+
+    private fun writeObjectRef(cachedId: Int) {
+        writeByte(byte(ref = true))
+        writeInt(cachedId)
+    }
+
+    private fun implWriteObject(obj: Any, context: SerialContext) {
+        val serializer = context.getSerializer(obj::class)
         when (serializer) {
             is InplaceSerializer<*> -> (serializer as InplaceSerializer<Any>).serialize(obj, this, context)
             is Serializer<*>        -> (serializer as Serializer<Any>).serialize(obj, this, context)
@@ -87,31 +130,17 @@ class BinaryOutput(private val out: DataOutput, sharingMode: SharingMode = Unsha
         }
     }
 
-    private fun registerCache(obj: Any) {
-        cache?.run {
-            val id = size
-            put(obj, id)
-            writeByte(SHARING)
-            writeInt(id)
-        }
-    }
-
-    private fun writeCachedId(cachedId: Int) {
-        writeByte(Constants.ID)
-        writeInt(cachedId)
-    }
-
     override fun close() {
         if (out is AutoCloseable) out.close()
     }
 
     companion object {
-        fun toStream(stream: OutputStream, sharingMode: SharingMode = Unshared) =
-            BinaryOutput(DataOutputStream(stream), sharingMode)
+        fun toStream(stream: OutputStream, sharingMode: SharingMode = Unshared, shareClassNames: Boolean = true) =
+            BinaryOutput(DataOutputStream(stream), sharingMode, shareClassNames)
 
-        fun toFile(path: Path, sharingMode: SharingMode = Unshared): BinaryOutput {
+        fun toFile(path: Path, sharingMode: SharingMode = Unshared, shareClassNames: Boolean = true): BinaryOutput {
             val stream = runIO("getting output stream") { Files.newOutputStream(path) }
-            return BinaryOutput.toStream(stream, sharingMode)
+            return BinaryOutput.toStream(stream, sharingMode, shareClassNames)
         }
 
         val logger: Logger = Logger.getLogger(BinaryOutput::class.java.name)

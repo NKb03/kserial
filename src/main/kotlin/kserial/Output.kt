@@ -7,8 +7,6 @@ package kserial
 interface Output: AutoCloseable {
     fun writeNull()
 
-    fun writeClass(cls: Class<*>)
-
     fun writeByte(byte: Byte)
 
     fun writeBoolean(boolean: Boolean)
@@ -25,6 +23,6 @@ interface Output: AutoCloseable {
 
     fun writeString(str: String)
 
-    fun writeObject(obj: Any?, context: SerialContext, typed: Boolean = true)
+    fun writeObject(obj: Any?, context: SerialContext, untyped: Boolean = false)
 }
 

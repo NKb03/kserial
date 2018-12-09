@@ -6,8 +6,6 @@
 
 package kserial
 
-import kotlin.reflect.KClass
-
 interface Input : AutoCloseable {
     fun readByte(): Byte
 
@@ -27,5 +25,5 @@ interface Input : AutoCloseable {
 
     fun readObject(context: SerialContext): Any?
 
-    fun readObject(cls: KClass<*>, context: SerialContext): Any?
+    fun readObject(cls: Class<*>, context: SerialContext): Any?
 }

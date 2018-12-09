@@ -6,29 +6,41 @@
 
 package kserial
 
-import kserial.internal.Constants.ID
-import kserial.internal.Constants.NULL
-import kserial.internal.Constants.OBJECT_START
-import kserial.internal.Constants.SHARING
+import kserial.internal.PrefixByte.isClsRef
+import kserial.internal.PrefixByte.isClsShare
+import kserial.internal.PrefixByte.isNull
+import kserial.internal.PrefixByte.isRef
+import kserial.internal.PrefixByte.isShare
+import kserial.internal.PrefixByte.isUntyped
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.ConsoleHandler
 import java.util.logging.Level.SEVERE
 import java.util.logging.Logger
-import kotlin.reflect.KClass
 
 class BinaryInput(private val input: DataInput) : Input {
     private val cache = HashMap<Int, Any>()
 
-    fun readClass(): Class<Any> {
-        val name = runIO("reading class name") { readString() }
+    private val clsNameCache = HashMap<Int, String>()
+
+    private fun readClass(prefix: Byte): Class<Any> {
+        val name = readClassName(prefix)
         try {
             return Class.forName(name) as Class<Any>
         } catch (cnf: ClassNotFoundException) {
             throw SerializationException("Could not find serialized class '$name'", cnf)
         }
     }
+
+    private fun readClassName(prefix: Byte): String =
+        if (isClsRef(prefix)) clsNameCache[readInt()]!!
+        else readString().also {
+            if (isClsShare(prefix)) {
+                val id = clsNameCache.size
+                clsNameCache[id] = it
+            }
+        }
 
     override fun readByte(): Byte = runIO("reading byte") { input.readByte() }
 
@@ -47,33 +59,52 @@ class BinaryInput(private val input: DataInput) : Input {
     override fun readString(): String = runIO("reading string") { input.readUTF() }
 
     override fun readObject(context: SerialContext): Any? {
-        val next = readByte()
-        return when (next) {
-            NULL         -> null
-            OBJECT_START -> readObjectImpl(context, readClass())
-            SHARING      -> {
-                val id = readInt()
-                val cls = readClass()
-                sharingReadObject(context, cls, id)
-            }
-            ID           -> readShared()
-            else         -> throw SerializationException("Unexpected byte $next")
+        val prefix = readByte()
+        if (isUntyped(prefix)) untypedWithoutSpecifiedCls()
+        return when {
+            isNull(prefix)  -> null
+            isRef(prefix)   -> readRef()
+            isShare(prefix) -> readObjectShared(context, prefix)
+            else            -> readObjectUnshared(context, prefix)
         }
     }
 
-    override fun readObject(cls: KClass<*>, context: SerialContext): Any? {
-        val next = readByte()
-        val jCls = cls.java as Class<Any>
-        return when (next) {
-            NULL         -> null
-            OBJECT_START -> readObjectImpl(context, jCls)
-            SHARING      -> sharingReadObject(context, jCls, readInt())
-            ID           -> readShared()
-            else         -> throw SerializationException("Unexpected byte $next")
+    private fun untypedWithoutSpecifiedCls() {
+        throw SerializationException("Cannot read untyped object without class specified")
+    }
+
+    override fun readObject(cls: Class<*>, context: SerialContext): Any? {
+        val prefix = readByte()
+        val anyCls = cls as Class<Any>
+        return when {
+            isNull(prefix)  -> null
+            isRef(prefix)   -> readRef()
+            isShare(prefix) -> readObjectShared(context, anyCls, id = readInt())
+            else            -> readObjectUnshared(context, anyCls)
         }
     }
 
-    private fun sharingReadObject(context: SerialContext, cls: Class<Any>, id: Int): Any {
+    private fun readObjectUnshared(ctx: SerialContext, prefix: Byte): Any {
+        val cls = readClass(prefix)
+        return readObjectUnshared(ctx, cls)
+    }
+
+    private fun readObjectShared(ctx: SerialContext, prefix: Byte): Any {
+        val id = readInt()
+        val cls = readClass(prefix)
+        return readObjectShared(ctx, cls, id)
+    }
+
+    private fun readRef(): Any {
+        val id = readInt()
+        return cache[id] ?: unresolvedRef(id)
+    }
+
+    private fun unresolvedRef(id: Int) {
+        throw SerializationException("Did not find object ref with id $id")
+    }
+
+    private fun readObjectShared(context: SerialContext, cls: Class<Any>, id: Int): Any {
         val ser = context.getSerializer(cls.kotlin)
         return when (ser) {
             is InplaceSerializer<*> -> {
@@ -89,16 +120,11 @@ class BinaryInput(private val input: DataInput) : Input {
                 cache[id] = obj
                 obj
             }
-            else                    -> throw AssertionError("Object returned by getSerializer is not a serializer")
+            else                    -> unexpectedSerializer()
         }
     }
 
-    private fun readShared(): Any {
-        val id = readInt()
-        return cache[id]!!
-    }
-
-    private fun readObjectImpl(context: SerialContext, cls: Class<Any>): Any {
+    private fun readObjectUnshared(context: SerialContext, cls: Class<Any>): Any {
         val serializer = context.getSerializer(cls.kotlin)
         return when (serializer) {
             is InplaceSerializer<*> -> {
@@ -108,8 +134,12 @@ class BinaryInput(private val input: DataInput) : Input {
                 obj
             }
             is Serializer<*>        -> (serializer as Serializer<Any>).deserialize(cls, this, context)
-            else                    -> AssertionError("Object returned by getSerializer is not a serializer")
+            else                    -> unexpectedSerializer()
         }
+    }
+
+    private fun unexpectedSerializer() {
+        throw AssertionError("Object returned by getSerializer is not a serializer")
     }
 
     override fun close() {

@@ -14,6 +14,29 @@ import java.io.ByteArrayOutputStream
 import kotlin.system.measureTimeMillis
 
 internal object DefaultSerializerSpec : Spek({
+    execute()
+}) {
+    val testCases = mutableSetOf<Any?>().apply {
+        add(null)
+        add(listOf(1, 2, 3))
+        add(listOf(1))
+        add(arrayOf(1, 2, 3))
+        add(arrayOf("hallo", "welt"))
+        add(Car(Engine("Engine", 1000), Brand("Brand", 10, Country.FR)))
+        add(1)
+        add(A(10, B()))
+        add(Integer(10))
+        add(intArrayOf(1, 2, 3, 4, 5))
+        add(arrayOf(
+            byteArrayOf(1, 2, 3),
+            intArrayOf(2, 450, 10),
+            arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
+        ))
+        add(X(123))
+    }
+}
+
+private fun Spec.execute() {
     given("a default serial context") {
         val ctx = SerialContext()
         ctx.useUnsafe = true
@@ -21,7 +44,7 @@ internal object DefaultSerializerSpec : Spek({
             val clsName = testCase?.javaClass?.name ?: "null"
             describe("serializing a $clsName") {
                 val baos = ByteArrayOutputStream()
-                val output = BinaryOutput.toStream(baos, ShareSame)
+                val output = BinaryOutput.toStream(baos, ShareSame, true)
                 val millisWrite = measureTimeMillis {
                     output.writeObject(testCase, ctx)
                 }
@@ -43,23 +66,5 @@ internal object DefaultSerializerSpec : Spek({
                 }
             }
         }
-    }
-}) {
-    val testCases = mutableSetOf<Any?>().apply {
-        add(null)
-        add(listOf(1, 2, 3))
-        add(listOf(1))
-        add(arrayOf(1, 2, 3))
-        add(arrayOf("hallo", "welt"))
-        add(Car(Engine("Engine", 1000), Brand("Brand", 10, Country.FR)))
-        add(1)
-        add(A(10, B()))
-        add(Integer(10))
-        add(intArrayOf(1, 2, 3, 4, 5))
-        add(arrayOf(
-            byteArrayOf(1, 2, 3),
-            intArrayOf(2, 450, 10),
-            arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
-        ))
     }
 }

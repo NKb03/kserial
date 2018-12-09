@@ -33,11 +33,11 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
                 writePrimitiveValue(f, obj, output)
             } else {
                 val v = f.get(obj)
-                val typed = !Modifier.isFinal(f.type.modifiers)
-                output.writeObject(v, context, typed)
+                val untyped = Modifier.isFinal(f.type.modifiers)
+                output.writeObject(v, context, untyped)
             }
         } catch (t: Throwable) {
-            throw SerializationException("Exception while writing $f")
+            throw SerializationException("Exception while writing $f", t)
         }
     }
 
@@ -79,14 +79,14 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
                 readPrimitiveField(f, obj, input)
             } else {
                 val v = if (Modifier.isFinal(f.type.modifiers)) {
-                    input.readObject(f.type.kotlin, context)
+                    input.readObject(f.type, context)
                 } else {
                     input.readObject(context)
                 }
                 f.set(obj, v)
             }
         } catch (t: Throwable) {
-            throw SerializationException("Exception while reading $f")
+            throw SerializationException("Exception while reading $f", t)
         }
     }
 
