@@ -7,16 +7,18 @@ package kserial
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.should.shouldMatch
 import kserial.DefaultSerializerSpec.testCases
+import kserial.SerializationOption.ShareClassNames
+import kserial.SerializationOption.Sharing
 import kserial.SharingMode.ShareSame
-import kserial.internal.BinaryInput
-import kserial.internal.BinaryOutput
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.*
 import java.io.ByteArrayOutputStream
 import kotlin.system.measureTimeMillis
 
 internal object DefaultSerializerSpec : Spek({
-    execute()
+    describe("Binary input and output") {
+        execute(IOFactory.Binary)
+    }
 }) {
     val testCases = mutableSetOf<Any?>().apply {
         add(null)
@@ -29,16 +31,18 @@ internal object DefaultSerializerSpec : Spek({
         add(A(10, B()))
         add(Integer(10))
         add(intArrayOf(1, 2, 3, 4, 5))
-        add(arrayOf(
-            byteArrayOf(1, 2, 3),
-            intArrayOf(2, 450, 10),
-            arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
-        ))
+        add(
+            arrayOf(
+                byteArrayOf(1, 2, 3),
+                intArrayOf(2, 450, 10),
+                arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
+            )
+        )
         add(X(123))
     }
 }
 
-private fun Spec.execute() {
+private fun Spec.execute(ioFactory: IOFactory) {
     given("a default serial context") {
         val ctx = SerialContext()
         ctx.useUnsafe = true
@@ -46,12 +50,12 @@ private fun Spec.execute() {
             val clsName = testCase?.javaClass?.name ?: "null"
             describe("serializing a $clsName") {
                 val baos = ByteArrayOutputStream()
-                val output = BinaryOutput.toStream(baos, ShareSame, true)
+                val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
                 val millisWrite = measureTimeMillis {
                     output.writeObject(testCase, ctx)
                 }
                 it("needs $millisWrite milliseconds to write") {}
-                val input = BinaryInput.fromByteArray(baos.toByteArray())
+                val input = ioFactory.createInput(baos.toByteArray())
                 var obj: Any? = null
                 val millisRead = measureTimeMillis {
                     obj = input.readObject(ctx)
