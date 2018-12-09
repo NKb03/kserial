@@ -5,7 +5,9 @@
 package kserial
 
 import java.io.*
-import java.nio.file.*
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Path
 
 interface IOFactory {
     fun createInput(stream: InputStream): Input
@@ -26,3 +28,7 @@ fun IOFactory.createOutput(file: File) = createOutput(FileOutputStream(file))
 fun IOFactory.createInput(path: Path) = createInput(Files.newInputStream(path))
 
 fun IOFactory.createOutput(path: Path) = createOutput(Files.newOutputStream(path))
+
+fun IOFactory.createInput(url: URL) = createInput(url.openStream())
+
+fun IOFactory.createOutput(url: URL) = createInput(url.openConnection().getInputStream())
