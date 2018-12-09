@@ -4,6 +4,8 @@
 
 package kserial
 
+import kserial.internal.BinaryInput
+import kserial.internal.BinaryOutput
 import java.io.*
 import java.net.URL
 import java.nio.file.Files

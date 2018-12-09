@@ -4,8 +4,9 @@
 
 @file:Suppress("UNCHECKED_CAST")
 
-package kserial
+package kserial.internal
 
+import kserial.*
 import kserial.internal.PrefixByte.isClsRef
 import kserial.internal.PrefixByte.isClsShare
 import kserial.internal.PrefixByte.isNull
@@ -13,8 +14,6 @@ import kserial.internal.PrefixByte.isRef
 import kserial.internal.PrefixByte.isShare
 import kserial.internal.PrefixByte.isUntyped
 import java.io.*
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.logging.ConsoleHandler
 import java.util.logging.Level.SEVERE
 import java.util.logging.Logger
@@ -44,19 +43,24 @@ class BinaryInput(private val input: DataInput) : Input {
 
     override fun readByte(): Byte = runIO("reading byte") { input.readByte() }
 
-    override fun readBoolean(): Boolean = runIO("reading boolean") { input.readBoolean() }
+    override fun readBoolean(): Boolean =
+        runIO("reading boolean") { input.readBoolean() }
 
-    override fun readShort(): Short = runIO("reading short") { input.readShort() }
+    override fun readShort(): Short =
+        runIO("reading short") { input.readShort() }
 
     override fun readInt(): Int = runIO("reading int") { input.readInt() }
 
     override fun readLong(): Long = runIO("reading long") { input.readLong() }
 
-    override fun readFloat(): Float = runIO("reading float") { input.readFloat() }
+    override fun readFloat(): Float =
+        runIO("reading float") { input.readFloat() }
 
-    override fun readDouble(): Double = runIO("reading double") { input.readDouble() }
+    override fun readDouble(): Double =
+        runIO("reading double") { input.readDouble() }
 
-    override fun readString(): String = runIO("reading string") { input.readUTF() }
+    override fun readString(): String =
+        runIO("reading string") { input.readUTF() }
 
     override fun readObject(context: SerialContext): Any? {
         val prefix = readByte()
@@ -148,13 +152,6 @@ class BinaryInput(private val input: DataInput) : Input {
 
     companion object {
         fun fromStream(stream: InputStream) = BinaryInput(DataInputStream(stream))
-
-        fun fromByteArray(arr: ByteArray) = fromStream(ByteArrayInputStream(arr))
-
-        fun fromFile(path: Path): BinaryInput {
-            val stream = runIO("getting input stream") { Files.newInputStream(path) }
-            return fromStream(stream)
-        }
 
         val logger: Logger = Logger.getLogger(BinaryInput::class.java.name)
 
