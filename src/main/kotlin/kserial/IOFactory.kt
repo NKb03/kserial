@@ -55,3 +55,5 @@ fun IOFactory.createInput(url: URL) = createInput(url.openStream())
 
 fun IOFactory.createOutput(url: URL, vararg options: SerializationOption) =
     createOutput(url.openConnection().getOutputStream(), *options)
+
+fun IOFactory.createInput(arr: ByteArray) = createInput(ByteArrayInputStream(arr))
