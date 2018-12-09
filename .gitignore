@@ -11,6 +11,5 @@
 gradle/
 .idea/encodings.xml
 .idea/misc.xml
-build.gradle
 build/
 /out/
