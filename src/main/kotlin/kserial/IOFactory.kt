@@ -19,7 +19,7 @@ interface IOFactory {
     fun createOutput(stream: OutputStream, vararg options: SerializationOption): Output
 
     object Binary : IOFactory {
-        override fun createInput(stream: InputStream): BinaryInput = BinaryInput.fromStream(stream)
+        override fun createInput(stream: InputStream): Input = BinaryInput.fromStream(stream)
 
         override fun createOutput(stream: OutputStream, vararg options: SerializationOption): Output {
             val sharingMode = getSharingMode(options)
