@@ -14,7 +14,7 @@ import java.io.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class BinaryOutput(
+internal class BinaryOutput(
     private val out: DataOutput,
     sharingMode: SharingMode = Unshared,
     private val shareClassNames: Boolean = true

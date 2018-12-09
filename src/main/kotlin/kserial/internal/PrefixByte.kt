@@ -42,6 +42,4 @@ internal object PrefixByte {
     }
 
     val NULL = byte(nul = true)
-
-    val OBJECT_REF = byte(ref = true)
 }
