@@ -5,6 +5,7 @@
 .idea/**/dictionaries
 .idea/**/uiDesigner.xml
 .idea/**/gradle.xml
+.idea/kotlinc.xml
 .idea/vcs.xml
 .gradle/
 gradle/
