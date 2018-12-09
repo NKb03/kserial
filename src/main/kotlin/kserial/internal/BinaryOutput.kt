@@ -134,7 +134,7 @@ class BinaryOutput(
     }
 
     companion object {
-        fun toStream(stream: OutputStream, sharingMode: SharingMode = Unshared, shareClassNames: Boolean = true) =
+        fun toStream(stream: OutputStream, sharingMode: SharingMode, shareClassNames: Boolean) =
             BinaryOutput(DataOutputStream(stream), sharingMode, shareClassNames)
 
         val logger: Logger = Logger.getLogger(BinaryOutput::class.java.name)
