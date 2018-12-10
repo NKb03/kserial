@@ -56,11 +56,7 @@ private fun Spec.execute(ioFactory: IOFactory) {
                 }
                 it("needs $millisWrite milliseconds to write") {}
                 val input = ioFactory.createInput(baos.toByteArray())
-                var obj: Any? = null
-                val millisRead = measureTimeMillis {
-                    obj = input.readObject(ctx)
-                }
-                it("needs $millisRead milliseconds to read") {}
+                val obj: Any? = input.readObject(ctx)
                 test("the read object should equal the original object") {
                     println("Expected $testCase")
                     println("Got $obj")
