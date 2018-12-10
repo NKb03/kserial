@@ -9,8 +9,10 @@ import java.lang.reflect.Modifier
 internal object DefaultSerializer : InplaceSerializer<Any> {
     override fun serialize(obj: Any, output: Output, context: SerialContext) {
         val cls = obj.javaClass
-        val kCls = cls.kotlin
-        require(kCls.objectInstance == null) { "Cannot serialize kotlin singletons" }
+        //        val kCls = cls.kotlin
+        //        if (kCls.objectInstance != null) {
+        //            throw SerializationException("Cannot serialize kotlin singleton of $kCls")
+        //        }
         writeFields(context, cls, obj, output)
     }
 
