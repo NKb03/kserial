@@ -14,7 +14,7 @@ enum class SharingMode {
     ShareSame {
         override fun createCache(): MutableMap<Any, Int>? = IdentityHashMap()
     },
-    ShareStructurallyEquivalent {
+    ShareEquivalent {
         override fun createCache(): MutableMap<Any, Int>? = HashMap()
     }
     ;

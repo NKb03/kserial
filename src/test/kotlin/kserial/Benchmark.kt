@@ -3,6 +3,8 @@ package kserial
 import com.natpryce.hamkrest.Described
 import com.natpryce.hamkrest.should.describedAs
 import kserial.IOFactory.Binary
+import kserial.SerializationOption.Sharing
+import kserial.SharingMode.*
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.SpecBody
 import org.jetbrains.spek.api.dsl.describe
@@ -18,7 +20,9 @@ internal object Benchmark : Spek({
             listOf(1, 2, 3) describedAs "a little list of ints",
             List(100) { it } describedAs "a larger list of ints",
             List(10000) { it } describedAs "a really large list of ints",
-            List(10) { List(10) { idx -> idx } } describedAs "a nested list of ints"
+            List(10) { List(10) { idx -> idx } } describedAs "a nested list of ints",
+            List(100) { List(100) { idx -> idx } } describedAs "a larger nested list of ints",
+            List(1000) { List(1000) { idx -> idx } } describedAs "a really large nested list of inst"
         )
         val context = SerialContext().apply {
             useUnsafe = true
@@ -31,7 +35,13 @@ internal object Benchmark : Spek({
                     serializeJava(t)
                 }
                 describe("with kserial") {
-                    serializeKSerial(factory, t, context)
+                    serializeKSerial(factory, t, context, Unshared)
+                }
+                describe("with kserial sharing same") {
+                    serializeKSerial(factory, t, context, ShareSame)
+                }
+                describe("with kserial sharing equal") {
+                    serializeKSerial(factory, t, context, ShareEquivalent)
                 }
             }
         }
@@ -41,14 +51,15 @@ internal object Benchmark : Spek({
 private fun SpecBody.serializeKSerial(
     factory: Binary,
     t: Described<Any>,
-    context: SerialContext
+    context: SerialContext,
+    sharingMode: SharingMode
 ) {
     var sumWriteTime = 0.0
     var sumReadTime = 0.0
     var sumSize = 0.0
     repeat(REPEAT_COUNT) {
         val stream = ByteArrayOutputStream()
-        val out = factory.createOutput(stream)
+        val out = factory.createOutput(stream, Sharing(sharingMode))
         sumWriteTime += measureNanoTime { out.writeObject(t.value, context) }
         val arr = stream.toByteArray()
         sumSize += arr.size
@@ -87,7 +98,7 @@ private fun SpecBody.serializeJava(t: Described<Any>) {
 private const val REPEAT_COUNT = 10
 
 
-private class Tree(val children: List<Tree>) : java.io.Serializable {
+private data class Tree(val children: List<Tree>) : java.io.Serializable {
     companion object {
         val leaf = Tree(emptyList())
 
