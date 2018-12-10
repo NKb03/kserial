@@ -26,11 +26,13 @@ internal object Benchmark : Spek({
         val factory = IOFactory.Binary
         for (t in tests) {
             val desc = t.description
-            describe("serializing $desc with java") {
-                serializeJava(t)
-            }
-            describe("serializing $desc with kserial") {
-                serializeKSerial(factory, t, context)
+            describe("serializing $desc") {
+                describe("with java") {
+                    serializeJava(t)
+                }
+                describe("with kserial") {
+                    serializeKSerial(factory, t, context)
+                }
             }
         }
     }
@@ -44,7 +46,7 @@ private fun SpecBody.serializeKSerial(
     var sumWriteTime = 0.0
     var sumReadTime = 0.0
     var sumSize = 0.0
-    repeat(REPEAT_COUNT) { i ->
+    repeat(REPEAT_COUNT) {
         val stream = ByteArrayOutputStream()
         val out = factory.createOutput(stream)
         sumWriteTime += measureNanoTime { out.writeObject(t.value, context) }
@@ -58,7 +60,7 @@ private fun SpecBody.serializeKSerial(
     val averageReadTime = sumReadTime / REPEAT_COUNT / 1000.0
     test("kserial deserialization needs $averageReadTime micros") {}
     val averageSize = sumSize / REPEAT_COUNT
-    test("java deserialization needs $averageSize bytes") {}
+    test("kserial deserialization needs $averageSize bytes") {}
 }
 
 private fun SpecBody.serializeJava(t: Described<Any>) {
