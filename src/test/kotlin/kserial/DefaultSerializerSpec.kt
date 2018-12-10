@@ -6,7 +6,7 @@ package kserial
 
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.should.shouldMatch
-import kserial.DefaultSerializerSpec.testCases
+import kserial.DefaultSerializerSpec.execute
 import kserial.SerializationOption.ShareClassNames
 import kserial.SerializationOption.Sharing
 import kserial.SharingMode.ShareSame
@@ -46,36 +46,37 @@ internal object DefaultSerializerSpec : Spek({
             add(this)
         }
     }
-}
 
-private fun Spec.execute(ioFactory: IOFactory) {
-    given("a default serial context") {
-        val ctx = SerialContext()
-        ctx.useUnsafe = true
-        for (testCase in testCases) {
-            val clsName = testCase?.javaClass?.name ?: "null"
-            describe("serializing a $clsName") {
-                val baos = ByteArrayOutputStream()
-                val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
-                val millisWrite = measureTimeMillis {
-                    output.writeObject(testCase, ctx)
-                    if (testCase is ArrayList<*>) {
-                        println(testCase)
+    private fun Spec.execute(ioFactory: IOFactory) {
+        given("a default serial context") {
+            val ctx = SerialContext()
+            ctx.useUnsafe = true
+            for (testCase in testCases) {
+                val clsName = testCase?.javaClass?.name ?: "null"
+                describe("serializing a $clsName") {
+                    val baos = ByteArrayOutputStream()
+                    val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
+                    val millisWrite = measureTimeMillis {
+                        output.writeObject(testCase, ctx)
+                        if (testCase is ArrayList<*>) {
+                            println(testCase)
+                        }
                     }
-                }
-                it("needs $millisWrite milliseconds to write") {}
-                val input = ioFactory.createInput(baos.toByteArray())
-                val obj: Any? = input.readObject(ctx)
-                test("the read object should equal the original object") {
-                    println("Expected $testCase")
-                    println("Got $obj")
-                    if (obj?.javaClass?.isArray == true) {
-                        assertArrayEquals(obj, testCase)
-                    } else {
-                        obj shouldMatch equalTo(testCase)
+                    it("needs $millisWrite milliseconds to write") {}
+                    val input = ioFactory.createInput(baos.toByteArray())
+                    val obj: Any? = input.readObject(ctx)
+                    test("the read object should equal the original object") {
+                        println("Expected $testCase")
+                        println("Got $obj")
+                        if (obj?.javaClass?.isArray == true) {
+                            assertArrayEquals(obj, testCase)
+                        } else {
+                            obj shouldMatch equalTo(testCase)
+                        }
                     }
                 }
             }
         }
     }
+
 }
