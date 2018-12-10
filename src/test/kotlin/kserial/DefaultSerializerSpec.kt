@@ -20,25 +20,31 @@ internal object DefaultSerializerSpec : Spek({
         execute(IOFactory.Binary)
     }
 }) {
-    val testCases = mutableSetOf<Any?>().apply {
-        add(null)
-        add(listOf(1, 2, 3))
-        add(listOf(1))
-        add(arrayOf(1, 2, 3))
-        add(arrayOf("hallo", "welt"))
-        add(Car(Engine("Engine", 1000), Brand("Brand", 10, Country.FR)))
-        add(1)
-        add(A(10, B()))
-        add(Integer(10))
-        add(intArrayOf(1, 2, 3, 4, 5))
-        add(
-            arrayOf(
-                byteArrayOf(1, 2, 3),
-                intArrayOf(2, 450, 10),
-                arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
+    val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
+
+    init {
+        with(testCases) {
+            add(null)
+            add(listOf(1, 2, 3))
+            add(listOf(1))
+            add(arrayOf(1, 2, 3))
+            add(arrayOf("hallo", "welt"))
+            add(Car(Engine("Engine", 1000), Brand("Brand", 10, Country.FR)))
+            add(1)
+            add(A(10, B()))
+            add(Integer(10))
+            add(intArrayOf(1, 2, 3, 4, 5))
+            add(
+                arrayOf(
+                    byteArrayOf(1, 2, 3),
+                    intArrayOf(2, 450, 10),
+                    arrayOf("h", "a", "l", "l", "o", arrayListOf(348))
+                )
             )
-        )
-        add(X(123))
+            add(X(123))
+            add(666)
+            add(this)
+        }
     }
 }
 
@@ -53,6 +59,9 @@ private fun Spec.execute(ioFactory: IOFactory) {
                 val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
                 val millisWrite = measureTimeMillis {
                     output.writeObject(testCase, ctx)
+                    if (testCase is ArrayList<*>) {
+                        println(testCase)
+                    }
                 }
                 it("needs $millisWrite milliseconds to write") {}
                 val input = ioFactory.createInput(baos.toByteArray())

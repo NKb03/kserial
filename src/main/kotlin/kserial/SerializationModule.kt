@@ -20,15 +20,19 @@ open class SerializationModule {
         customInPlaceSerializers[cls] = serializer
     }
 
-    @Suppress("UNCHECKED_CAST")
     internal fun <T : Any> getSerializer(cls: KClass<T>): Any? {
         customSerializers[cls]?.let { return it }
+        return getInplaceSerializer(cls)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> getInplaceSerializer(cls: KClass<T>): Any? {
         val ser = customInPlaceSerializers[cls]
         if (ser != null) return ser
         else {
             for (superCls in cls.superclasses) {
-                val superClsSerializer = customInPlaceSerializers[superCls]
-                if (superClsSerializer != null) return superClsSerializer as Serializer<T>
+                val superClsSerializer = getInplaceSerializer(superCls)
+                if (superClsSerializer != null) return superClsSerializer as InplaceSerializer<T>
             }
         }
         return null
