@@ -13,12 +13,12 @@ internal object Benchmark : Spek({
     describe("java serialization vs kserial") {
         val tests = sequenceOf<Described<Any>>(
             Tree.construct(3) describedAs "a little tree",
-            /*        Tree.construct(5) describedAs "a larger tree",
-        Tree.construct(10) describedAs "a really large tree",*/
+            Tree.construct(5) describedAs "a larger tree",
+            Tree.construct(7) describedAs "a really large tree",
             listOf(1, 2, 3) describedAs "a little list of ints",
             List(100) { it } describedAs "a larger list of ints",
             List(10000) { it } describedAs "a really large list of ints",
-            List(10) { List(10) { it } } describedAs "a nested list of ints"
+            List(10) { List(10) { idx -> idx } } describedAs "a nested list of ints"
         )
         val context = SerialContext().apply {
             useUnsafe = true
