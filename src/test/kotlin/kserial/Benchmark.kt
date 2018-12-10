@@ -57,10 +57,10 @@ internal object Benchmark {
             val input = factory.createInput(arr)
             sumReadTime += measureNanoTime { input.readObject(context) }
         }
-        val averageWriteTime = sumWriteTime / REPEAT_COUNT / 1000.0
-        println("kserial serialization needs $averageWriteTime micros")
-        val averageReadTime = sumReadTime / REPEAT_COUNT / 1000.0
-        println("kserial deserialization needs $averageReadTime micros")
+        val averageWriteTime = sumWriteTime / REPEAT_COUNT / 1000_000.0
+        println("kserial serialization needs $averageWriteTime millis")
+        val averageReadTime = sumReadTime / REPEAT_COUNT / 1000_000.0
+        println("kserial deserialization needs $averageReadTime millis")
         val averageSize = sumSize / REPEAT_COUNT
         println("kserial deserialization needs $averageSize bytes")
         println()
@@ -73,23 +73,22 @@ internal object Benchmark {
         repeat(REPEAT_COUNT) {
             val os = ByteArrayOutputStream()
             val oos = ObjectOutputStream(os)
-            sumWriteTime += measureNanoTime { oos.writeObject(t.value) } / 1000.0
+            sumWriteTime += measureNanoTime { oos.writeObject(t.value) } / 1000_000.0
             val arr = os.toByteArray()
             sumSize += arr.size
             val ois = ObjectInputStream(ByteArrayInputStream(arr))
-            sumReadTime += measureNanoTime { ois.readObject() } / 1000.0
+            sumReadTime += measureNanoTime { ois.readObject() } / 1000_000.0
         }
         val averageWriteTime = sumWriteTime / REPEAT_COUNT
-        println("java serialization needs $averageWriteTime micros")
+        println("java serialization needs $averageWriteTime millis")
         val averageReadTime = sumReadTime / REPEAT_COUNT
-        println("java deserialization needs $averageReadTime micros")
+        println("java deserialization needs $averageReadTime millis")
         val averageSize = sumSize / REPEAT_COUNT
         println("java deserialization needs $averageSize bytes")
         println()
     }
 
     private const val REPEAT_COUNT = 10
-
 
     private data class Tree(val children: List<Tree>) : java.io.Serializable {
         companion object {
