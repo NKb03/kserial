@@ -44,7 +44,7 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
     private fun getFields(cls: Class<Any>): List<Field> =
         cls.declaredFields
             .filter { f ->
-                !Modifier.isStatic(f.modifiers) && !Modifier.isTransient(f.modifiers)
+                !Modifier.isStatic(f.modifiers) && !cls.isAnnotationPresent(KTransient::class.java)
             }
 
     private fun writePrimitiveValue(f: Field, obj: Any, output: Output) {

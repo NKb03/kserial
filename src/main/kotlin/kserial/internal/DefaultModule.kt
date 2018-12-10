@@ -21,6 +21,5 @@ internal object DefaultModule: SerializationModule() {
         register(LONG)
         register(FLOAT)
         register(DOUBLE)
-        register(CollectionSerializer)
     }
 }
