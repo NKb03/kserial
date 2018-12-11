@@ -1,8 +1,15 @@
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.17"
+    }
+}
+
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.10'
 }
 
+apply plugin: 'org.jetbrains.dokka'
 apply plugin: 'maven-publish'
 
 group 'org.nikok'
@@ -27,11 +34,34 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
+
+dokka {
+    outputDirectory = "$projectDir/javadoc"
+    includes = ["docs/format_documentation.md"]
+    samples = ["src/samples/"]
+    includeNonPublic = false
+    reportUndocumented = true
+    impliedPlatforms = ["JVM"]
+    noStdlibLink = false
+}
+
+sourceSets {
+    samples {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from(components.java)
             artifact sourcesJar
+            artifact javadocJar
         }
     }
 }
