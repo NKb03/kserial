@@ -106,6 +106,7 @@ class SerialContext {
             ?: findSerializerByAnnotation(cls)
             ?: companionSerializer(cls)
             ?: getCustomizedSerializer(cls)
+            ?: dataClassSerializer(cls)
             ?: DefaultSerializer
     }
 
