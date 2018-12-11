@@ -41,7 +41,7 @@ task javadocJar(type: Jar) {
 
 dokka {
     outputDirectory = "$projectDir/javadoc"
-    includes = ["docs/format_documentation.md"]
+    includes = ["docs/sfns.md"]
     samples = ["src/samples/"]
     includeNonPublic = false
     reportUndocumented = true
