@@ -10,6 +10,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 
 internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serializer<T> {
@@ -44,6 +45,7 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
             }
             param to v
         }
+        primaryConstructor.isAccessible = true
         return primaryConstructor.callBy(args)
     }
 
