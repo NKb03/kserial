@@ -8,9 +8,20 @@ package kserial.internal
 
 import kserial.*
 import kserial.SharingMode.Unshared
+import kserial.internal.PrefixByte.BYTE_T
+import kserial.internal.PrefixByte.CHAR_T
+import kserial.internal.PrefixByte.DOUBLE_T
+import kserial.internal.PrefixByte.FALSE
+import kserial.internal.PrefixByte.FLOAT_T
+import kserial.internal.PrefixByte.INT_T
+import kserial.internal.PrefixByte.LONG_T
 import kserial.internal.PrefixByte.NULL
-import kserial.internal.PrefixByte.byte
-import java.io.*
+import kserial.internal.PrefixByte.SHORT_T
+import kserial.internal.PrefixByte.STRING_T
+import kserial.internal.PrefixByte.TRUE
+import kserial.internal.PrefixByte.prefixByte
+import java.io.DataOutput
+import java.io.IOException
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -24,38 +35,51 @@ internal class BinaryOutput(
     private val clsNameCache = HashMap<String, Int>()
 
     override fun writeNull() = runIO("writing null") {
-        writeByte(NULL)
+        out.writeByte(NULL)
     }
 
     override fun writeByte(byte: Byte) = runIO("writing byte") {
+        out.writeByte(BYTE_T)
         out.writeByte(byte.toInt())
     }
 
     override fun writeBoolean(boolean: Boolean) = runIO("writing boolean") {
-        out.writeBoolean(boolean)
+        if (boolean) out.writeByte(TRUE)
+        else out.writeByte(FALSE)
+    }
+
+    override fun writeChar(char: Char) {
+        out.writeByte(CHAR_T)
+        out.writeChar(char.toInt())
     }
 
     override fun writeShort(short: Short) = runIO("writing short") {
+        out.writeByte(SHORT_T)
         out.writeShort(short.toInt())
     }
 
     override fun writeInt(int: Int) = runIO("writing int") {
+        out.writeByte(INT_T)
         out.writeInt(int)
     }
 
     override fun writeLong(long: Long) = runIO("writing long") {
+        out.writeByte(LONG_T)
         out.writeLong(long)
     }
 
     override fun writeFloat(float: Float) = runIO("writing float") {
+        out.writeByte(FLOAT_T)
         out.writeFloat(float)
     }
 
     override fun writeDouble(double: Double) = runIO("writing double") {
+        out.writeByte(DOUBLE_T)
         out.writeDouble(double)
     }
 
     override fun writeString(str: String) = runIO("writing string") {
+        out.writeByte(STRING_T)
         out.writeUTF(str)
     }
 
@@ -63,8 +87,25 @@ internal class BinaryOutput(
         val cachedId = cache?.get(obj)
         when {
             obj == null      -> writeNull()
+            obj.isPrimitive  -> writePrimitive(obj)
             cachedId != null -> writeObjectRef(cachedId)
             else             -> writeObjectNotNull(obj, untyped, context)
+        }
+    }
+
+    private fun writePrimitive(obj: Any) {
+        when (obj) {
+            is Byte   -> writeByte(obj)
+            true      -> out.writeByte(TRUE)
+            false     -> out.writeByte(FALSE)
+            is Char   -> writeChar(obj)
+            is Short  -> writeShort(obj)
+            is Int    -> writeInt(obj)
+            is Long   -> writeLong(obj)
+            is Float  -> writeFloat(obj)
+            is Double -> writeDouble(obj)
+            is String -> writeString(obj)
+            else      -> throw AssertionError("Non primitive object passed to writePrimitive")
         }
     }
 
@@ -82,20 +123,19 @@ internal class BinaryOutput(
     }
 
     private fun writePrefix(untyped: Boolean, clsId: Int?) {
-        val clsRef = clsId != null
-        val prefix = byte(
+        val prefix = prefixByte(
             share = cache != null,
             untyped = untyped,
-            clsShare = shareClassNames && !clsRef,
-            clsRef = clsRef
+            clsShare = shareClassNames && clsId == null,
+            clsRef = clsId != null
         )
-        writeByte(prefix)
+        out.writeByte(prefix)
     }
 
     private fun writeClass(clsId: Int?, name: String) {
-        if (clsId != null) writeInt(clsId)
+        if (clsId != null) out.writeInt(clsId)
         else {
-            writeString(name)
+            out.writeUTF(name)
             shareClass(name)
         }
     }
@@ -110,14 +150,14 @@ internal class BinaryOutput(
     private fun shareObject(obj: Any) {
         cache?.run {
             val id = size
-            writeInt(id)
+            out.writeInt(id)
             cache[obj] = id
         }
     }
 
     private fun writeObjectRef(cachedId: Int) {
-        writeByte(byte(ref = true))
-        writeInt(cachedId)
+        out.writeByte(prefixByte(ref = true))
+        out.writeInt(cachedId)
     }
 
     private fun implWriteObject(obj: Any, context: SerialContext) {
@@ -134,9 +174,6 @@ internal class BinaryOutput(
     }
 
     companion object {
-        fun toStream(stream: OutputStream, sharingMode: SharingMode, shareClassNames: Boolean) =
-            BinaryOutput(DataOutputStream(stream), sharingMode, shareClassNames)
-
         val logger: Logger = Logger.getLogger(BinaryOutput::class.java.name)
 
         private fun logException(ex: IOException) {

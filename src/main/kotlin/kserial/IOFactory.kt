@@ -24,7 +24,7 @@ interface IOFactory {
         override fun createOutput(stream: OutputStream, vararg options: SerializationOption): Output {
             val sharingMode = getSharingMode(options)
             val shareClsNames = isShareClassNames(options)
-            return BinaryOutput.toStream(stream, sharingMode, shareClsNames)
+            return BinaryOutput(DataOutputStream(stream), sharingMode, shareClsNames)
         }
     }
 

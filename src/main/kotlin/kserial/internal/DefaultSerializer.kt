@@ -9,10 +9,6 @@ import java.lang.reflect.Modifier
 internal object DefaultSerializer : InplaceSerializer<Any> {
     override fun serialize(obj: Any, output: Output, context: SerialContext) {
         val cls = obj.javaClass
-        //        val kCls = cls.kotlin
-        //        if (kCls.objectInstance != null) {
-        //            throw SerializationException("Cannot serialize kotlin singleton of $kCls")
-        //        }
         writeFields(context, cls, obj, output)
     }
 
@@ -31,13 +27,9 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
     ) {
         try {
             f.isAccessible = true
-            if (f.type.isPrimitive) {
-                writePrimitiveValue(f, obj, output)
-            } else {
-                val v = f.get(obj)
-                val untyped = Modifier.isFinal(f.type.modifiers)
-                output.writeObject(v, context, untyped)
-            }
+            val v = f.get(obj)
+            val untyped = Modifier.isFinal(f.type.modifiers)
+            output.writeObject(v, context, untyped)
         } catch (t: Throwable) {
             throw SerializationException("Exception while writing $f", t)
         }
@@ -48,18 +40,6 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
             .filter { f ->
                 !Modifier.isStatic(f.modifiers) && !cls.isAnnotationPresent(KTransient::class.java)
             }
-
-    private fun writePrimitiveValue(f: Field, obj: Any, output: Output) {
-        when (f.type.kotlin) {
-            Byte::class    -> output.writeByte(f.getByte(obj))
-            Boolean::class -> output.writeBoolean(f.getBoolean(obj))
-            Short::class   -> output.writeShort(f.getShort(obj))
-            Int::class     -> output.writeInt(f.getInt(obj))
-            Long::class    -> output.writeLong(f.getLong(obj))
-            Float::class   -> output.writeFloat(f.getFloat(obj))
-            Double::class  -> output.writeDouble(f.getDouble(obj))
-        }
-    }
 
     override fun deserialize(obj: Any, input: Input, context: SerialContext) {
         val cls = obj.javaClass
@@ -77,31 +57,14 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
     ) {
         try {
             f.isAccessible = true
-            if (f.type.isPrimitive) {
-                readPrimitiveField(f, obj, input)
+            val v = if (Modifier.isFinal(f.type.modifiers)) {
+                input.readObject(f.type, context)
             } else {
-                val v = if (Modifier.isFinal(f.type.modifiers)) {
-                    input.readObject(f.type, context)
-                } else {
-                    input.readObject(context)
-                }
-                f.set(obj, v)
+                input.readObject(context)
             }
+            f.set(obj, v)
         } catch (t: Throwable) {
             throw SerializationException("Exception while reading $f", t)
         }
     }
-
-    private fun readPrimitiveField(f: Field, obj: Any, input: Input) {
-        when (f.type.kotlin) {
-            Boolean::class -> f.setBoolean(obj, input.readBoolean())
-            Byte::class    -> f.setByte(obj, input.readByte())
-            Short::class   -> f.setShort(obj, input.readShort())
-            Int::class     -> f.setInt(obj, input.readInt())
-            Long::class    -> f.setLong(obj, input.readLong())
-            Float::class   -> f.setFloat(obj, input.readFloat())
-            Double::class  -> f.setDouble(obj, input.readDouble())
-        }
-    }
-
 }

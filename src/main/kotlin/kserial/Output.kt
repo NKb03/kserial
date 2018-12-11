@@ -11,6 +11,8 @@ interface Output: AutoCloseable {
 
     fun writeBoolean(boolean: Boolean)
 
+    fun writeChar(char: Char)
+
     fun writeShort(short: Short)
 
     fun writeInt(int: Int)

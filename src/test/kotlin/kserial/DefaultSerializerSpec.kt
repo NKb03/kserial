@@ -43,7 +43,6 @@ internal object DefaultSerializerSpec : Spek({
             )
             add(X(123))
             add(666)
-            add(this)
         }
     }
 
@@ -58,9 +57,6 @@ internal object DefaultSerializerSpec : Spek({
                     val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
                     val millisWrite = measureTimeMillis {
                         output.writeObject(testCase, ctx)
-                        if (testCase is ArrayList<*>) {
-                            println(testCase)
-                        }
                     }
                     it("needs $millisWrite milliseconds to write") {}
                     val input = ioFactory.createInput(baos.toByteArray())

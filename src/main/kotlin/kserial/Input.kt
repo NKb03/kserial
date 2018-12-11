@@ -11,6 +11,8 @@ interface Input : AutoCloseable {
 
     fun readBoolean(): Boolean
 
+    fun readChar(): Char
+
     fun readShort(): Short
 
     fun readInt(): Int
