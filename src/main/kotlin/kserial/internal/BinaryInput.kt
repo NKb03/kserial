@@ -127,7 +127,15 @@ internal class BinaryInput(private val input: DataInput) : Input {
         }
     }
 
-    override fun readObject(cls: Class<*>, context: SerialContext): Any? {
+    override fun <T : Any> readObject(cls: Class<T>, context: SerialContext): T? {
+        val o = readObjectImpl(cls, context)
+        return cls.cast(o)
+    }
+
+    private fun <T : Any> readObjectImpl(
+        cls: Class<T>,
+        context: SerialContext
+    ): Any? {
         val kt = cls.kotlin
         if (kt.isPrimitive) return readPrimitive(kt)
         val prefix = input.readByte().toInt()

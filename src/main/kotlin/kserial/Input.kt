@@ -27,5 +27,5 @@ interface Input : AutoCloseable {
 
     fun readObject(context: SerialContext): Any?
 
-    fun readObject(cls: Class<*>, context: SerialContext): Any?
+    fun <T : Any> readObject(cls: Class<T>, context: SerialContext): T?
 }
