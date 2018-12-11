@@ -22,7 +22,7 @@ class SerialContext {
         install(DefaultModule)
     }
 
-    private fun <T : Any> getCustomizedSerializer(cls: KClass<out T>): Any? {
+    private fun getCustomizedSerializer(cls: KClass<*>): Any? {
         for (module in modules) {
             val ser = module.getSerializer(cls)
             if (ser != null) return ser
@@ -30,22 +30,21 @@ class SerialContext {
         return null
     }
 
-    private fun <T : Any> findSerializerByAnnotation(cls: KClass<out T>): Serializer<*>? {
+    private fun findSerializerByAnnotation(cls: KClass<*>): Any? {
         val annotation = cls.findAnnotation<SerializableWith>() ?: return null
         val serializerCls = annotation.serializerCls
         checkSerializerCls(serializerCls, cls)
-        val instance = serializerCls.objectInstance ?: serializerCls.createInstance()
-        return instance as Serializer<*>
+        return serializerCls.objectInstance ?: serializerCls.createInstance()
     }
 
-    private fun <T : Any> checkSerializerCls(serializerCls: KClass<*>, cls: KClass<out T>) {
+    private fun checkSerializerCls(serializerCls: KClass<*>, cls: KClass<*>) {
         if (!isSerializerOk(cls, serializerCls)) {
             throw SerializationException("Serializer class of SerializableWith annotation must be a serializer of type $cls")
         }
     }
 
-    private fun <T : Any> isSerializerOk(
-        cls: KClass<out T>,
+    private fun isSerializerOk(
+        cls: KClass<*>,
         serializerCls: KClass<*>
     ): Boolean {
         val expectedSerializerType = Serializer::class.createType(
@@ -54,7 +53,7 @@ class SerialContext {
         return serializerCls.starProjectedType.isSubtypeOf(expectedSerializerType)
     }
 
-    private fun <T : Any> companionSerializer(cls: KClass<out T>): Any? {
+    private fun companionSerializer(cls: KClass<*>): Any? {
         val companion = cls.companionObject ?: return null
         return if (isSerializerOk(cls, companion)) {
             val companionObject = companion.objectInstance
@@ -62,12 +61,24 @@ class SerialContext {
         } else null
     }
 
-    private fun <T : Any> serializableSerializer(cls: KClass<out T>): Any? =
+    private fun serializableSerializer(cls: KClass<*>): Any? =
         if (cls.isSubclassOf(Serializable::class)) SerializableSerializer
         else null
 
-    private fun <T : Any> enumSerializer(cls: KClass<out T>): Serializer<*>? =
+    private fun enumSerializer(cls: KClass<*>): Serializer<*>? =
         if (cls.java.isEnum) EnumSerializer else null
+
+    private fun objectArraySerializer(arrCls: Class<*>): Serializer<*>? {
+        return when {
+            !arrCls.isArray                  -> null
+            arrCls.componentType.isPrimitive -> null
+            else                             -> ObjectArraySerializer
+        }
+    }
+
+    private fun dataClassSerializer(cls: KClass<*>): DataClassSerializer<*>? =
+        if (!cls.isData) null
+        else DataClassSerializer(cls)
 
     @Suppress("UNCHECKED_CAST")
     internal fun <T : Any> getSerializer(cls: KClass<out T>): Any {
@@ -88,7 +99,7 @@ class SerialContext {
         return nullaryConstructor.newInstance()
     }
 
-    private fun <T : Any> createSerializer(cls: KClass<out T>): Any {
+    private fun createSerializer(cls: KClass<*>): Any {
         return serializableSerializer(cls)
             ?: enumSerializer(cls)
             ?: objectArraySerializer(cls.java)
@@ -96,14 +107,6 @@ class SerialContext {
             ?: companionSerializer(cls)
             ?: getCustomizedSerializer(cls)
             ?: DefaultSerializer
-    }
-
-    private fun <T : Any> objectArraySerializer(arrCls: Class<out T>): Serializer<*>? {
-        return when {
-            !arrCls.isArray                  -> null
-            arrCls.componentType.isPrimitive -> null
-            else                             -> ObjectArraySerializer
-        }
     }
 
     fun install(module: SerializationModule) {
