@@ -4,6 +4,12 @@
 
 package kserial
 
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.should.shouldMatch
+import org.jetbrains.spek.api.dsl.SpecBody
+import org.jetbrains.spek.api.dsl.describe
+import java.io.ByteArrayOutputStream
+
 data class Car(val engine: Engine, val brand: Brand) {
     companion object : Serializer<Car> {
         override fun serialize(obj: Car, output: Output, context: SerialContext) {
@@ -34,4 +40,26 @@ data class A(val i: Int = 10, val b: B = B())
 
 data class X(val i: Int) {
     val x = this
+}
+
+fun SpecBody.testSerialization(
+    testCase: Any?,
+    ioFactory: IOFactory,
+    ctx: SerialContext
+) {
+    val clsName = testCase?.javaClass?.name ?: "null"
+    describe("serializing a $clsName") {
+        val baos = ByteArrayOutputStream()
+        val output = ioFactory.createOutput(baos)
+        output.writeObject(testCase, ctx)
+        val input = ioFactory.createInput(baos.toByteArray())
+        val obj: Any? = input.readObject(ctx)
+        test("the read object should equal the original object") {
+            if (obj?.javaClass?.isArray == true) {
+                assertArrayEquals(obj, testCase)
+            } else {
+                obj shouldMatch equalTo(testCase)
+            }
+        }
+    }
 }
