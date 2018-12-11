@@ -8,6 +8,8 @@ import kserial.SerializationOption.Sharing
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.logging.Level
+import java.util.logging.Logger
 
 internal object Benchmark {
     private val testData = listOf<Described<Any>>(
@@ -72,11 +74,16 @@ internal object Benchmark {
         val strategies = factories.map { f -> KSerialStrategy(f, context) } + JavaSerialization
         val csvPath = Paths.get(args[0])
         val out = Files.newBufferedWriter(csvPath)
-        benchmark(out, REPEAT_COUNT, strategies, testData)
+        val logger = Logger.getLogger("benchmark")
+        logger.level = Level.INFO
+        benchmark(out, REPEAT_COUNT, strategies, testData, logger)
+        out.close()
     }
 
     private fun waitForProfiler() {
+        println("Type Enter to start the benchmark")
         System.`in`.read()
+        println("Starting benchmark")
     }
 
     private const val REPEAT_COUNT = 10

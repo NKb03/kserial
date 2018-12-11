@@ -17,7 +17,7 @@ import kotlin.system.measureTimeMillis
 
 internal object DefaultSerializerSpec : Spek({
     describe("Binary input and output") {
-        execute(IOFactory.Binary)
+        execute(IOFactory.binary(Sharing(ShareSame), ShareClassNames))
     }
 }) {
     private val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
@@ -54,7 +54,7 @@ internal object DefaultSerializerSpec : Spek({
                 val clsName = testCase?.javaClass?.name ?: "null"
                 describe("serializing a $clsName") {
                     val baos = ByteArrayOutputStream()
-                    val output = ioFactory.createOutput(baos, Sharing(ShareSame), ShareClassNames)
+                    val output = ioFactory.createOutput(baos)
                     val millisWrite = measureTimeMillis {
                         output.writeObject(testCase, ctx)
                     }

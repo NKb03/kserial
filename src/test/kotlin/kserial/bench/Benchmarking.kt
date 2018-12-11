@@ -6,6 +6,7 @@ package kserial.bench
 
 import com.natpryce.hamkrest.Described
 import java.io.*
+import java.util.logging.Logger
 import kotlin.system.measureNanoTime
 
 typealias Millis = Double
@@ -22,16 +23,20 @@ fun benchmark(
     writer: Writer,
     repeatCount: Int,
     strategies: List<SerializationStrategy>,
-    objects: List<Described<Any>>
+    objects: List<Described<Any>>,
+    logger: Logger
 ) {
     val output = CsvOutput(strategies.map { it.name }, writer)
     for (obj in objects) {
         val desc = obj.description
         val v = obj.value
+        logger.info("Serializing $desc")
         output.row(desc) {
             for (strategy in strategies) {
+                logger.info("Trying ${strategy.name}")
                 val res = benchmark(repeatCount, strategy, v)
                 add(res)
+                logger.info(res.toString())
             }
         }
     }
@@ -51,11 +56,11 @@ private fun benchmark(repeatCount: Int, strategy: SerializationStrategy, obj: An
     }
     val averageWriteTime = sumWriteTime / repeatCount / 1000_000.0
     val averageReadTime = sumReadTime / repeatCount / 1000_000.0
-    val averageSize = (sumSize / repeatCount).toLong()
+    val averageSize = sumSize / repeatCount.toDouble()
     return BenchmarkResult(averageWriteTime, averageReadTime, averageSize)
 }
 
-data class BenchmarkResult(val writeTime: Millis, val readTime: Millis, val bytes: Long) {
+data class BenchmarkResult(val writeTime: Millis, val readTime: Millis, val bytes: Double) {
     override fun toString(): String {
         val kiloBytes = bytes / 1024
         return "$writeTime ms/$readTime ms/$kiloBytes kb"
@@ -74,7 +79,8 @@ class CsvOutput(columns: List<String>, private val writer: Writer) : BenchmarkOu
     private val size: Int = columns.size
 
     init {
-        columns.joinTo(writer, separator = ",", postfix = "\n")
+        columns.joinTo(writer, separator = ",")
+        writer.appendln()
     }
 
     override fun row(name: String, build: Row.() -> Unit) {

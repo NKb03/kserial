@@ -29,7 +29,7 @@ interface IOFactory {
             return BinaryOutput(DataOutputStream(stream), sharingMode, shareClsNames)
         }
 
-        override fun toString(): String = "Binary: shareClsNames: $shareClsNames, $sharingMode"
+        override fun toString(): String = "Binary: shareClsNames: $shareClsNames $sharingMode"
     }
 
     companion object {
