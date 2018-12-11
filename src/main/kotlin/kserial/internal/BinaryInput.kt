@@ -129,7 +129,7 @@ internal class BinaryInput(private val input: DataInput) : Input {
 
     override fun <T : Any> readObject(cls: Class<T>, context: SerialContext): T? {
         val o = readObjectImpl(cls, context)
-        return cls.cast(o)
+        return o as T?
     }
 
     private fun <T : Any> readObjectImpl(
