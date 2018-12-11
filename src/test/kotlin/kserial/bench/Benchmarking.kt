@@ -26,7 +26,7 @@ fun benchmark(
     objects: List<Described<Any>>,
     logger: Logger
 ) {
-    val output = CsvOutput(strategies.map { it.name }, writer)
+    val output = CsvOutput(listOf("Serialized object") + strategies.map { it.name }, writer)
     for (obj in objects) {
         val desc = obj.description
         val v = obj.value
@@ -76,8 +76,6 @@ interface Row {
 }
 
 class CsvOutput(columns: List<String>, private val writer: Writer) : BenchmarkOutput {
-    private val size: Int = columns.size
-
     init {
         columns.joinTo(writer, separator = ",")
         writer.appendln()
@@ -88,7 +86,6 @@ class CsvOutput(columns: List<String>, private val writer: Writer) : BenchmarkOu
         writer.write(",")
         val row = RowImpl()
         row.build()
-        check(row.size == size) { "Row size doesn't match columns count" }
         writer.appendln()
     }
 
