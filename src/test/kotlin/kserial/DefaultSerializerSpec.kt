@@ -20,7 +20,7 @@ internal object DefaultSerializerSpec : Spek({
         execute(IOFactory.Binary)
     }
 }) {
-    val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
+    private val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
 
     init {
         with(testCases) {
@@ -47,7 +47,7 @@ internal object DefaultSerializerSpec : Spek({
         }
     }
 
-    private fun Spec.execute(ioFactory: IOFactory) {
+    fun Spec.execute(ioFactory: IOFactory) {
         given("a default serial context") {
             val ctx = SerialContext()
             ctx.useUnsafe = true
@@ -78,5 +78,5 @@ internal object DefaultSerializerSpec : Spek({
             }
         }
     }
-
 }
+
