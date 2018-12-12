@@ -10,6 +10,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
+import kotlin.reflect.jvm.isAccessible
 
 class SerialContext(private val modules: Set<SerializationModule>, private val useUnsafe: Boolean) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
@@ -77,18 +78,19 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
         return cachedSerializers.getOrPut(cls) { createSerializer(cls) }
     }
 
-    internal fun <T : Any> createInstance(cls: Class<T>): T {
-        val nullaryConstructor = try {
-            cls.getDeclaredConstructor().also { it.isAccessible = true }
-        } catch (noNullaryConstructor: NoSuchMethodException) {
-            @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T : Any> createInstance(cls: KClass<T>): T {
+        val nullary = cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
+        return if (nullary != null) {
+            nullary.isAccessible = true
+            nullary.callBy(emptyMap())
+        } else {
             if (useUnsafe) {
-                return unsafe.allocateInstance(cls) as T
+                unsafe.allocateInstance(cls.java) as T
             } else {
                 throw SerializationException("Classes implementing InplaceSerializer must have a nullary constructor")
             }
         }
-        return nullaryConstructor.newInstance()
     }
 
     private fun createSerializer(cls: KClass<*>): Any {
