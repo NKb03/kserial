@@ -107,6 +107,10 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
 
         var useUnsafe = false
 
+        init {
+            install(DefaultModule)
+        }
+
 
         fun install(module: SerializationModule) {
             modules.add(module)
