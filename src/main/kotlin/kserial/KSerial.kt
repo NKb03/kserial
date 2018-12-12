@@ -36,6 +36,6 @@ class KSerial private constructor(
     }
 
     companion object {
-        fun newInstance(block: Builder.() -> Unit): KSerial = Builder().apply(block).build()
+        inline fun newInstance(block: Builder.() -> Unit = {}): KSerial = Builder().apply(block).build()
     }
 }
