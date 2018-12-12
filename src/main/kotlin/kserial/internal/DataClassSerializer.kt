@@ -7,7 +7,6 @@ package kserial.internal
 import kserial.*
 import kserial.internal.Impl.writeField
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
@@ -37,7 +36,7 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
 
     override fun deserialize(cls: Class<T>, input: Input, context: SerialContext): T {
         val args = parameters.associate { param ->
-            val v = if (hasFinalType(param)) {
+            val v = if (param.hasFinalType) {
                 val type = param.type.classifier as KClass<*>
                 input.readObject(type.java, context)
             } else {
@@ -47,10 +46,5 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
         }
         primaryConstructor.isAccessible = true
         return primaryConstructor.callBy(args)
-    }
-
-    private fun hasFinalType(param: KParameter): Boolean {
-        val cls = param.type.classifier as? KClass<*> ?: return false
-        return cls.isFinal
     }
 }

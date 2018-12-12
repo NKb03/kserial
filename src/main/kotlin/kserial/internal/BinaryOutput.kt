@@ -86,10 +86,10 @@ internal class BinaryOutput(
     override fun writeObject(obj: Any?, context: SerialContext, untyped: Boolean) {
         val cachedId = cache?.get(obj)
         when {
-            obj == null      -> writeNull()
-            obj.isPrimitive  -> writePrimitive(obj)
-            cachedId != null -> writeObjectRef(cachedId)
-            else             -> writeObjectNotNull(obj, untyped, context)
+            obj == null          -> writeNull()
+            obj.isPrimitiveValue -> writePrimitive(obj)
+            cachedId != null     -> writeObjectRef(cachedId)
+            else                 -> writeObjectNotNull(obj, untyped, context)
         }
     }
 

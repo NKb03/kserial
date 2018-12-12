@@ -100,12 +100,12 @@ class SerialContext {
     }
 
     private fun createSerializer(cls: KClass<*>): Any {
-        return serializableSerializer(cls)
+        return getCustomizedSerializer(cls)
+            ?: serializableSerializer(cls)
             ?: enumSerializer(cls)
             ?: objectArraySerializer(cls.java)
             ?: findSerializerByAnnotation(cls)
             ?: companionSerializer(cls)
-            ?: getCustomizedSerializer(cls)
             ?: dataClassSerializer(cls)
             ?: DefaultSerializer
     }

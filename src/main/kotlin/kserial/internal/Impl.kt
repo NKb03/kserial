@@ -4,6 +4,7 @@ import kserial.*
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
+@Suppress("UNCHECKED_CAST")
 internal object Impl {
     fun writeField(
         f: Field,
