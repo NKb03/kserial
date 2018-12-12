@@ -13,7 +13,7 @@ import org.jetbrains.spek.api.dsl.*
 
 internal object DefaultSerializerSpec : Spek({
     describe("Binary input and output") {
-        execute(IOFactory.binary(Sharing(ShareSame), ShareClassNames))
+        execute(KSerial.binary(Sharing(ShareSame), ShareClassNames))
     }
 }) {
     private val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
@@ -42,13 +42,13 @@ internal object DefaultSerializerSpec : Spek({
         }
     }
 
-    fun Spec.execute(ioFactory: IOFactory) {
+    fun Spec.execute(kserial: KSerial) {
         given("a default serial context") {
             val ctx = SerialContext.newInstance {
                 useUnsafe = true
             }
             for (testCase in testCases) {
-                testSerialization(testCase, ioFactory, ctx)
+                testSerialization(testCase, kserial, ctx)
             }
         }
     }

@@ -16,7 +16,7 @@ internal object DataClassSerializerSpec : Spek({
         val ctx = SerialContext.newInstance {
             useUnsafe = true
         }
-        val factory = IOFactory.binary(Sharing(ShareSame), ShareClassNames)
+        val factory = KSerial.binary(Sharing(ShareSame), ShareClassNames)
         for (testCase in testCases) {
             testSerialization(testCase, factory, ctx)
         }

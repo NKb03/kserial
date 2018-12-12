@@ -43,7 +43,7 @@ internal object AdapterSerializerSpec : Spek({
 
     given("an adapter serializer for data") {
         val data = Data(1, 1)
-        val factory = IOFactory.binary()
+        val factory = KSerial.binary()
         val module = SerializationModule().apply {
             register(DataSerializer)
         }

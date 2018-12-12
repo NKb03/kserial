@@ -18,8 +18,8 @@ data class Car(val engine: Engine, val brand: Brand) {
         }
 
         override fun deserialize(cls: Class<Car>, input: Input, context: SerialContext): Car {
-            val brand = input.read<Brand>(context)
-            val engine = input.read<Engine>(context)
+            val brand = input.readTyped<Brand>(context)
+            val engine = input.readTyped<Engine>(context)
             return Car(engine, brand)
         }
     }
@@ -44,15 +44,15 @@ data class X(val i: Int) {
 
 fun SpecBody.testSerialization(
     testCase: Any?,
-    ioFactory: IOFactory,
+    KSerial: KSerial,
     ctx: SerialContext
 ) {
     val clsName = testCase?.javaClass?.name ?: "null"
     describe("serializing a $clsName") {
         val baos = ByteArrayOutputStream()
-        val output = ioFactory.createOutput(baos)
+        val output = KSerial.createOutput(baos)
         output.writeObject(testCase, ctx)
-        val input = ioFactory.createInput(baos.toByteArray())
+        val input = KSerial.createInput(baos.toByteArray())
         val obj: Any? = input.readObject(ctx)
         test("the read object should equal the original object") {
             if (obj?.javaClass?.isArray == true) {

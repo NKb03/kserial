@@ -24,7 +24,7 @@ internal object Benchmark {
         List(1000) { List(1000) { idx -> idx } } describedAs "a really large nested list of ints"
     )
 
-    private class KSerialStrategy(private val factory: IOFactory, private val context: SerialContext) :
+    private class KSerialStrategy(private val factory: KSerial, private val context: SerialContext) :
         SerializationStrategy {
         override fun write(out: OutputStream, obj: Any) {
             val output = factory.createOutput(out)
@@ -67,8 +67,8 @@ internal object Benchmark {
         val modes = SharingMode.values()
         val factories = modes.flatMap { mode ->
             listOf(
-                IOFactory.binary(Sharing(mode), ShareClassNames),
-                IOFactory.binary(Sharing(mode))
+                KSerial.binary(Sharing(mode), ShareClassNames),
+                KSerial.binary(Sharing(mode))
             )
         }
         val strategies = factories.map { f -> KSerialStrategy(f, context) } + JavaSerialization
