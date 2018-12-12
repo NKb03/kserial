@@ -3,8 +3,6 @@ package kserial.bench
 import com.natpryce.hamkrest.Described
 import com.natpryce.hamkrest.should.describedAs
 import kserial.*
-import kserial.SerializationOption.ShareClassNames
-import kserial.SerializationOption.Sharing
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -67,8 +65,14 @@ internal object Benchmark {
         val modes = SharingMode.values()
         val factories = modes.flatMap { mode ->
             listOf(
-                KSerial.binary(Sharing(mode), ShareClassNames),
-                KSerial.binary(Sharing(mode))
+                KSerial.newInstance {
+                    sharingMode = mode
+                    shareClsNames = false
+                },
+                KSerial.newInstance {
+                    sharingMode = mode
+                    shareClsNames = true
+                }
             )
         }
         val strategies = factories.map { f -> KSerialStrategy(f, context) } + JavaSerialization

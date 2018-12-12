@@ -5,9 +5,7 @@
 package kserial
 
 import kserial.DataClassSerializerSpec.testCases
-import kserial.SerializationOption.ShareClassNames
-import kserial.SerializationOption.Sharing
-import kserial.SharingMode.ShareSame
+import kserial.SharingMode.ShareEquivalent
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 
@@ -16,7 +14,10 @@ internal object DataClassSerializerSpec : Spek({
         val ctx = SerialContext.newInstance {
             useUnsafe = true
         }
-        val factory = KSerial.binary(Sharing(ShareSame), ShareClassNames)
+        val factory = KSerial.newInstance {
+            shareClsNames = true
+            sharingMode = ShareEquivalent
+        }
         for (testCase in testCases) {
             testSerialization(testCase, factory, ctx)
         }

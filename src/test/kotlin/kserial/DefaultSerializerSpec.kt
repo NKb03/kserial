@@ -5,15 +5,16 @@
 package kserial
 
 import kserial.DefaultSerializerSpec.execute
-import kserial.SerializationOption.ShareClassNames
-import kserial.SerializationOption.Sharing
-import kserial.SharingMode.ShareSame
+import kserial.SharingMode.ShareEquivalent
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.*
 
 internal object DefaultSerializerSpec : Spek({
     describe("Binary input and output") {
-        execute(KSerial.binary(Sharing(ShareSame), ShareClassNames))
+        execute(KSerial.newInstance {
+            shareClsNames = true
+            sharingMode = ShareEquivalent
+        })
     }
 }) {
     private val testCases = mutableSetOf<Any?>(ArrayList(listOf(1, 2, 3)))
