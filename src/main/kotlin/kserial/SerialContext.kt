@@ -11,16 +11,8 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
 
-class SerialContext {
-    var useUnsafe = false
-
-    private val modules = mutableSetOf<SerializationModule>()
-
+class SerialContext(private val modules: Set<SerializationModule>, private val useUnsafe: Boolean) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
-
-    init {
-        install(DefaultModule)
-    }
 
     private fun getCustomizedSerializer(cls: KClass<*>): Any? {
         for (module in modules) {
@@ -110,8 +102,17 @@ class SerialContext {
             ?: DefaultSerializer
     }
 
-    fun install(module: SerializationModule) {
-        modules.add(module)
+    class Builder @PublishedApi internal constructor() {
+        private val modules = mutableSetOf<SerializationModule>()
+
+        var useUnsafe = false
+
+
+        fun install(module: SerializationModule) {
+            modules.add(module)
+        }
+
+        @PublishedApi internal fun build(): SerialContext = SerialContext(modules, useUnsafe)
     }
 
     companion object {
@@ -120,5 +121,7 @@ class SerialContext {
         private val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe").also {
             it.isAccessible = true
         }
+
+        inline fun newInstance(block: Builder.() -> Unit) = Builder().apply(block).build()
     }
 }
