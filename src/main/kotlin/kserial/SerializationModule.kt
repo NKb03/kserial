@@ -45,5 +45,10 @@ open class SerializationModule {
     inline fun <reified T : Any> register(serializer: InplaceSerializer<T>) {
         register(T::class, serializer)
     }
+
+    companion object {
+        inline fun newInstance(build: SerializationModule.() -> Unit): SerializationModule =
+            SerializationModule().apply(build)
+    }
 }
 
