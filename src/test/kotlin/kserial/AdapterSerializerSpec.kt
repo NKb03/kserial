@@ -47,7 +47,7 @@ internal object AdapterSerializerSpec : Spek({
         val module = SerializationModule().apply {
             register(DataSerializer)
         }
-        val context = SerialContext().apply {
+        val context = SerialContext.newInstance {
             install(module)
         }
         testSerialization(data, factory, context)

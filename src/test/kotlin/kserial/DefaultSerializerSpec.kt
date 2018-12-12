@@ -44,8 +44,9 @@ internal object DefaultSerializerSpec : Spek({
 
     fun Spec.execute(ioFactory: IOFactory) {
         given("a default serial context") {
-            val ctx = SerialContext()
-            ctx.useUnsafe = true
+            val ctx = SerialContext.newInstance {
+                useUnsafe = true
+            }
             for (testCase in testCases) {
                 testSerialization(testCase, ioFactory, ctx)
             }

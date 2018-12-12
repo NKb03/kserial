@@ -13,8 +13,9 @@ import org.jetbrains.spek.api.dsl.given
 
 internal object DataClassSerializerSpec : Spek({
     given("a default serial context") {
-        val ctx = SerialContext()
-        ctx.useUnsafe = true
+        val ctx = SerialContext.newInstance {
+            useUnsafe = true
+        }
         val factory = IOFactory.binary(Sharing(ShareSame), ShareClassNames)
         for (testCase in testCases) {
             testSerialization(testCase, factory, ctx)

@@ -61,7 +61,7 @@ internal object Benchmark {
             System.exit(1)
         }
         waitForProfiler()
-        val context = SerialContext().apply {
+        val context = SerialContext.newInstance {
             useUnsafe = true
         }
         val modes = SharingMode.values()
