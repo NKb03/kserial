@@ -24,7 +24,7 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
     private fun getFields(cls: Class<Any>): List<Field> =
         cls.declaredFields
             .filter { f ->
-                !Modifier.isStatic(f.modifiers) && !cls.isAnnotationPresent(KTransient::class.java)
+                !Modifier.isStatic(f.modifiers) && !f.isAnnotationPresent(KTransient::class.java)
             }
 
     override fun deserialize(obj: Any, input: Input, context: SerialContext) {
