@@ -2,7 +2,7 @@
  * @author Nikolaus Knop
  */
 
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import java.lang.reflect.Array

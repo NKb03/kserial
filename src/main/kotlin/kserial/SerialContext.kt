@@ -4,7 +4,8 @@
 
 package kserial
 
-import kserial.internal.*
+import kserial.internal.DefaultModule
+import kserial.serializers.*
 import sun.misc.Unsafe
 import kotlin.reflect.KClass
 import kotlin.reflect.KTypeProjection

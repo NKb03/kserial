@@ -52,7 +52,7 @@ dokka {
 
 sourceSets {
     samples {
-        compileClasspath += sourceSets.main.compileClasspath
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
         runtimeClasspath += sourceSets.main.runtimeClasspath
     }
 }

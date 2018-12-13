@@ -10,7 +10,16 @@ import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 
+/**
+ * A Serializer that writes all properties of itself with an extensions parameter of type [T] to serialize the object.
+ * @sample kserial.AdapterSerializerSample
+ * @constructor
+ * @param type the type of the serialized object, must be of a subtype of [T], otherwise bad things will happen.
+ */
 abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceSerializer<T> {
+    /**
+     * Uses the [KClass.starProjectedType] of the specified [cls] as the type
+     */
     constructor(cls: KClass<T>) : this(cls.starProjectedType)
 
     override fun serialize(obj: T, output: Output, context: SerialContext) {

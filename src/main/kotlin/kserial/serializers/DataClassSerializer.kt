@@ -2,10 +2,11 @@
  *@author Nikolaus Knop
  */
 
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import kserial.internal.Impl.writeField
+import kserial.internal.hasFinalType
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor

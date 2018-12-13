@@ -1,18 +1,15 @@
-/**
- * @author Nikolaus Knop
- */
-
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import java.lang.reflect.Array
 
-internal object LongArraySerializer: ArraySerializer<LongArray>() {
+internal object ObjectArraySerializer: ArraySerializer<kotlin.Array<Any?>>() {
     override fun serializeElement(arr: Any, index: Int, output: Output, context: SerialContext) {
-        output.writeLong(Array.getLong(arr, index))
+        val o = Array.get(arr, index)
+        output.writeObject(o, context)
     }
 
     override fun deserializeElement(arr: Any, index: Int, input: Input, context: SerialContext) {
-        Array.setLong(arr, index, input.readLong())
+        Array.set(arr, index, input.readObject(context))
     }
 }

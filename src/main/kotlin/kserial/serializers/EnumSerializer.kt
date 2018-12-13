@@ -1,4 +1,4 @@
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 

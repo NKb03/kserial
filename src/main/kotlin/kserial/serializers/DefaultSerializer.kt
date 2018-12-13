@@ -1,6 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import kserial.internal.Impl.readField

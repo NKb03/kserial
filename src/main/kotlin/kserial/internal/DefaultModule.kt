@@ -1,6 +1,7 @@
 package kserial.internal
 
 import kserial.SerializationModule
+import kserial.serializers.*
 
 internal object DefaultModule: SerializationModule() {
     init {

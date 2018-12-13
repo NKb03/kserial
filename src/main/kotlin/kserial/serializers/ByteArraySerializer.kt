@@ -2,17 +2,17 @@
  * @author Nikolaus Knop
  */
 
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import java.lang.reflect.Array
 
-internal object ShortArraySerializer: ArraySerializer<ShortArray>() {
+internal object ByteArraySerializer: ArraySerializer<ByteArray>() {
     override fun serializeElement(arr: Any, index: Int, output: Output, context: SerialContext) {
-        output.writeShort(Array.getShort(arr, index))
+        output.writeByte(Array.getByte(arr, index))
     }
 
     override fun deserializeElement(arr: Any, index: Int, input: Input, context: SerialContext) {
-        Array.setShort(arr, index, input.readShort())
+        Array.setByte(arr, index, input.readByte())
     }
 }

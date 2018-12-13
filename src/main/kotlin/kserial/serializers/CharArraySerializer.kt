@@ -1,18 +1,14 @@
-/**
- *@author Nikolaus Knop
- */
-
-package kserial.internal
+package kserial.serializers
 
 import kserial.*
 import java.lang.reflect.Array
 
-internal object BooleanArraySerializer: ArraySerializer<BooleanArray>() {
+internal object CharArraySerializer : ArraySerializer<CharArray>() {
     override fun serializeElement(arr: Any, index: Int, output: Output, context: SerialContext) {
-        output.writeBoolean(Array.getBoolean(arr, index))
+        output.writeChar(Array.getChar(arr, index))
     }
 
     override fun deserializeElement(arr: Any, index: Int, input: Input, context: SerialContext) {
-        Array.setBoolean(arr, index, input.readBoolean())
+        Array.setChar(arr, index, input.readChar())
     }
 }
