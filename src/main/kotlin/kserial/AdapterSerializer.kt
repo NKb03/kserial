@@ -12,7 +12,7 @@ import kotlin.reflect.jvm.isAccessible
 
 /**
  * A Serializer that writes all properties of itself with an extensions parameter of type [T] to serialize the object.
- * @sample kserial.AdapterSerializerSample
+ * @sample kserial.serializers.DateSerializer
  * @constructor
  * @param type the type of the serialized object, must be of a subtype of [T], otherwise bad things will happen.
  */
