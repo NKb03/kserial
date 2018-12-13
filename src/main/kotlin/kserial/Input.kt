@@ -6,9 +6,18 @@
 
 package kserial
 
+/**
+ * This interface implements and input for the [SFTS serialization format](file://D:\Bibliotheken\Aktive Projekte\kserial\docs\sfts.html)
+ */
 interface Input : AutoCloseable {
+    /**
+     * Read a byte, that was written with [Output.writeByte]
+     */
     fun readByte(): Byte
 
+    /**
+     * Read a boolean
+     */
     fun readBoolean(): Boolean
 
     fun readChar(): Char
