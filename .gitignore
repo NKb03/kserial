@@ -15,3 +15,8 @@ gradle/
 build/
 /out/
 javadoc
+.idea/modules/
+.idea/statistic.xml
+src/main/resources/
+src/samples/
+src/test/resources/

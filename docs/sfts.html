@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="generator" content="pandoc"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+    <title>SFTS</title>
+    <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+
+    </style>
+    <link rel="stylesheet" href="style.css"/>
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<header>
+    <h1 class="title">SFTS</h1>
+</header>
+<h1 id="the-serialization-format-for-typed-structures---sfts">The Serialization Format for Typed Structures - SFTS</h1>
+<h2 id="motivation">Motivation</h2>
+<h3 id="aims-of-sfts">Aims of SFTS</h3>
+<ul>
+    <li>SFTS is a binary format
+        <ul>
+            <li>this has speed and size advantages against human-readable formats</li>
+        </ul>
+    </li>
+    <li>SFTS doesn’t serialize field names or any other metadata associated with a structure except its type
+        <ul>
+            <li>this also keeps the serialized size minimal</li>
+            <li>field names are normally unnecessary information</li>
+            <li>Eventual drawback: the order of field access is important</li>
+        </ul>
+    </li>
+    <li>SFTS does caching
+        <ul>
+            <li>That means that when an object is written two times the second time just a reference back to the first
+                structure is written
+            </li>
+            <li>Also has the advantage that recursive structures are not a problem</li>
+            <li>Caching can be disabled</li>
+        </ul>
+    </li>
+    <li>Low overhead for primitive data types
+        <ul>
+            <li>Just one byte is wasted for type information per primitive written</li>
+        </ul>
+    </li>
+    <li>Last but not least: Good error messages and safety
+        <ul>
+            <li>Where necessary SFTS allows storing type information to intercept errors very early and to give good
+                error messages
+            </li>
+        </ul>
+    </li>
+</ul>
+<h3 id="legitimacy-and-comparison-to-other-formats">Legitimacy and Comparison to other Formats</h3>
+<h4 id="human-readable-formats-like-json">Human readable formats like JSON</h4>
+<ul>
+    <li>In comparison to JSON and other non-binary formats sfts has a clear advantage in both performance and serialized
+        size TODO(why)
+    </li>
+</ul>
+<h4 id="binary-formats-like-the-java-serialization-format">Binary formats like the Java Serialization format</h4>
+<ul>
+    <li>SFTS beats the standard Java Serialization in both performance and serialized size, because Java has to write
+        all class information to ensure compatibility.
+    </li>
+    <li>Another major advantage over the Java Serialization is SFTS’s platform independence, as it does not rely on
+        classes.
+    </li>
+</ul>
+<h2 id="the-format">The format</h2>
+<p>Each value written to a sfts file has a prefix or header, which is exactly one byte.</p>
+<h3 id="primitives">Primitives</h3>
+<p>Primitive values are scalars of one of the following types:</p>
+<ul>
+    <li>Booleans (true and false) with size of one byte</li>
+    <li>Bytes in range -128 to 127 with size of one byte</li>
+    <li>Chars in range 0 to 2^16 with size of two bytes</li>
+    <li>Shorts in range -2^15 to 2^15 - 1 with size of two bytes</li>
+    <li>Integers in range -2^31 to 2^31 - 1 with size of four bytes</li>
+    <li>Long Integers in range -2^63 to 2^63 - 1 with a size of eight bytes</li>
+    <li>Floating point numbers implementing the IEEE 754 standard with a size of four bytes</li>
+    <li>Double precision integers with a size of eight bytes</li>
+    <li>Strings</li>
+</ul>
+<p>The prefix for primitive values is a negative byte. After that prefix just the value of the primitive is written
+    (except for booleans). - Bytes have the prefix -1 - The Boolean value <code>true</code> is just a -2 - The boolean
+    value <code>false</code> is written as a -3 - Shorts have the prefix -4 - Chars have the prefix -5 - Ints have the
+    prefix -6 - Longs have the prefix -7 - Floats have the prefix -8 - Doubles have the prefix -9 - Strings have the
+    prefix -10</p>
+<h4 id="on-strings">On Strings</h4>
+<p>Strings are treated specially. They are primitives because their prefix is negative. After this prefix the size of
+    the String is written followed by all characters in their exact order (without the character prefix).</p>
+<h4 id="why-primitives-have-prefixes">Why primitives have prefixes</h4>
+<p>It may seem unnecessary for primitives to have prefixes as the caller normally knows which kind of primitive he wants
+    to read. But the advantage of writing prefixes is safety and greatly improved error messages. When somebody writes
+    an integer to a stream and actually reads a long, without prefixes what’s happening would be that a cryptic error
+    occurs saying that the end of the file has been reached. With prefixes this isn’t the case as the caller gets the
+    error message that he tried to read a long where a int was written. Also this fail-fast behaviour prevents state
+    from being silently corrupted because of falsely deserialized structures.</p>
+<h3 id="structures">Structures</h3>
+<h4 id="ids">Id’s</h4>
+<p>Id’s are used to identify shared objects that can be shared and referenced by this id. Id’s are written as 32-bit
+    signed integers and have no integer prefix.</p>
+<p>Structures have a non-negative byte prefix which is divided in multiple bit-flags.</p>
+<ul>
+    <li>The first bit of structure headers is always 0 because otherwise the value was negative and so denoted a
+        primitive header
+    </li>
+    <li>The second bit is the “null-bit”</li>
+    <li>The third bit is the “ref-bit”</li>
+    <li>The fourth bit is the “share-bit”</li>
+    <li>The fifth bit is the “untyped-bit”</li>
+    <li>The sixth bit is the “type-share” bit</li>
+    <li>The seventh bit is the “type-ref” bit</li>
+    <li>The eight bit remains unused</li>
+</ul>
+<h4 id="prefix-rules">Prefix rules</h4>
+<p>The following rules give all valid combinations for the prefix bit:</p>
+<ul>
+    <li>The “null” bit excludes all other bits. If the null bit is set, all other set bits are invalid.</li>
+    <li>The “ref” bit excludes all other bits. If the ref bit is set, all other set bits are invalid.</li>
+    <li>The “ref” bit and the “share” bit are mutually exclusive. Only one or no of them may be set.</li>
+    <li>The “untyped” bit forbids the “type-share” and the “type-ref” bits.</li>
+    <li>The “type-share” and the “type-ref” are mutually exclusive. Only one or no of them may be set. As follows only
+        the following combinations of bits are valid:
+    </li>
+    <li>null, no further information needs to be written.<br/>
+    </li>
+    <li>ref, after the header the following information is written:
+        <ul>
+            <li>the id which is used to reference the already shared structure</li>
+        </ul>
+    </li>
+    <li>unshared and untyped, after the header the following information is written
+        <ul>
+            <li>The serialized fields of the structure</li>
+        </ul>
+    </li>
+    <li>shared and untyped, after the header the following information is written
+        <ul>
+            <li>The id which will be used to reference the structure</li>
+            <li>The serialized fields of the structure</li>
+        </ul>
+    </li>
+    <li>unshared and class ref, after the header the following information is written</li>
+    <li>unshared and type unshared, after the header the following information is written
+        <ul>
+            <li>The type of the structure</li>
+            <li>The serialized fields of the structure</li>
+        </ul>
+    </li>
+    <li>shared and class unshared, after the header the following information is written</li>
+    <li>shared and class shared, after the header the following information is written</li>
+    <li>shared and class ref, after the header the following information is written</li>
+</ul>
+</body>
+</html>
