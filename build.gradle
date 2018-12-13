@@ -29,17 +29,13 @@ static String spek(Object dep) {
     return "org.jetbrains.spek:spek-$dep:1.1.5"
 }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.kotlin
     classifier = 'sources'
 }
 
-task javadocJar(type: Jar) {
-    from javadoc
-    classifier = 'javadoc'
-}
-
 dokka {
+    outputFormat = "javadoc"
     outputDirectory = "$projectDir/javadoc"
     includes = ["sfts.md"]
     samples = ["src/samples/"]
@@ -61,7 +57,6 @@ publishing {
         mavenJava(MavenPublication) {
             from(components.java)
             artifact sourcesJar
-            artifact javadocJar
         }
     }
 }
