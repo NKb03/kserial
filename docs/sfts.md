@@ -1,3 +1,4 @@
+%SFTS
 # The Serialization Format for Typed Structures - SFTS
 
 ## Motivation
