@@ -9,18 +9,29 @@ import kserial.internal.BinaryInput
 import kserial.internal.BinaryOutput
 import java.io.*
 
+/**
+ * Root API-class of the kserial-api
+ */
 class KSerial private constructor(
     private val shareClsNames: Boolean,
     private val sharingMode: SharingMode
 ) {
-
+    /**
+     * Create an [Input] reading from the specified [stream]
+     */
     fun createInput(stream: InputStream): Input =
         BinaryInput(DataInputStream(stream))
 
+    /**
+     * Create an [Output] writing to the specified [stream]
+     */
     fun createOutput(stream: OutputStream): Output {
         return BinaryOutput(DataOutputStream(stream), sharingMode, shareClsNames)
     }
 
+    /**
+     * The builder for [KSerial]
+     */
     class Builder @PublishedApi internal constructor() {
         /**
          * Specifies whether to share class names, defaults to `false`
@@ -36,6 +47,9 @@ class KSerial private constructor(
     }
 
     companion object {
+        /**
+         * Build a [KSerial] instance
+         */
         inline fun newInstance(block: Builder.() -> Unit = {}): KSerial = Builder().apply(block).build()
     }
 }
