@@ -70,25 +70,41 @@ Also this fail-fast behaviour prevents state from being silently corrupted becau
 
 ### Structures
 
+#### Id's
+Id's are used to identify shared objects that can be shared and referenced by this id.
+Id's are written as 32-bit signed integers and have no integer prefix.
+
 Structures have a non-negative byte prefix which is divided in multiple bit-flags.
 
-- The first bit unimportant it is just responsible for the positivity of the prefix
-- If the second bit is set the serialized structure is `null`. No further information is written
-- If the third bit is set the serialized structure is a reference to another previously written structure.
-The next int (without prefix) denotes the id which the referenced object has.
-- If the fourth bit is set the serialized structure is shared. The following information is written in order:
-    * The id, and integer without prefix, which the structure is given
-    * Type information (if not untyped)
-    * The fields of the structure 
-- If the fifth bit is set the serialized structure is untyped. That means no type information is written.
-The following information is written in order:
-    * 
-All members are directly written after optional sharing id (see the fourth bit).
-- If the sixth bit is set the type name is shared.
+- The first bit of structure headers is always 0 because otherwise the value was negative and so denoted a primitive header 
+- The second bit is the "null-bit"
+- The third bit is the "ref-bit"
+- The fourth bit is the "share-bit"
+- The fifth bit is the "untyped-bit"
+- The sixth bit is the "type-share" bit
+- The seventh bit is the "type-ref" bit
+- The eight bit remains unused
+
 #### Prefix rules
 The following rules give all valid combinations for the prefix bit:
 - The "null" bit excludes all other bits. If the null bit is set, all other set bits are invalid.
 - The "ref" bit excludes all other bits. If the ref bit is set, all other set bits are invalid.
 - The "ref" bit and the "share" bit are mutually exclusive. Only one or no of them may be set.
-- The "untyped" bit forbids the "type share" and the "type ref" bits.
-- The "type share" and the "type ref" are mutually exclusive. Only one or no of them may be set.
+- The "untyped" bit forbids the "type-share" and the "type-ref" bits.
+- The "type-share" and the "type-ref" are mutually exclusive. Only one or no of them may be set.
+As follows only the following combinations of bits are valid:
+- null, no further information needs to be written.    
+- ref, after the header the following information is written:
+    * the id which is used to reference the already shared structure
+- unshared and untyped, after the header the following information is written
+    * The serialized fields of the structure
+- shared and untyped, after the header the following information is written
+    * The id which will be used to reference the structure
+    * The serialized fields of the structure
+- unshared and class ref, after the header the following information is written
+- unshared and type unshared, after the header the following information is written
+    * The type of the structure
+    * The serialized fields of the structure
+- shared and class unshared, after the header the following information is written
+- shared and class shared, after the header the following information is written
+- shared and class ref, after the header the following information is written
