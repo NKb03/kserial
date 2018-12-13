@@ -1,4 +1,4 @@
-# Module kserial
+# The Serialization Format for Typed Structures - SFTS
 
 ## Motivation
 ### Aims of SFTS 
@@ -86,7 +86,8 @@ Structures have a non-negative byte prefix which is divided in multiple bit-flag
 - The eight bit remains unused
 
 #### Prefix rules
-The following rules give all valid combinations for the prefix bit:
+The following rules give all valid combinations for the prefix bit:  
+
 - The "null" bit excludes all other bits. If the null bit is set, all other set bits are invalid.
 - The "ref" bit excludes all other bits. If the ref bit is set, all other set bits are invalid.
 - The "ref" bit and the "share" bit are mutually exclusive. Only one or no of them may be set.
