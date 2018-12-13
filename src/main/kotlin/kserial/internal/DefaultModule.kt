@@ -14,5 +14,6 @@ internal object DefaultModule: SerializationModule() {
         register(LongArraySerializer)
         register(FloatArraySerializer)
         register(DoubleArraySerializer)
+        register(DateSerializer)
     }
 }
