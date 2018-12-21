@@ -13,7 +13,11 @@ import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 
-class SerialContext(private val modules: Set<SerializationModule>, private val useUnsafe: Boolean) {
+class SerialContext(
+    private val modules: Set<SerializationModule>,
+    private val useUnsafe: Boolean,
+    private val classLoader: ClassLoader
+) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
 
     private fun getCustomizedSerializer(cls: KClass<*>): Any? {
@@ -94,6 +98,8 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
         }
     }
 
+    internal fun loadClass(name: String) = Class.forName(name, true, classLoader)
+
     private fun createSerializer(cls: KClass<*>): Any {
         return getCustomizedSerializer(cls)
             ?: serializableSerializer(cls)
@@ -110,6 +116,8 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
 
         var useUnsafe = false
 
+        lateinit var classLoader: ClassLoader
+
         init {
             install(DefaultModule)
         }
@@ -119,7 +127,7 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
             modules.add(module)
         }
 
-        @PublishedApi internal fun build(): SerialContext = SerialContext(modules, useUnsafe)
+        @PublishedApi internal fun build(): SerialContext = SerialContext(modules, useUnsafe, classLoader)
     }
 
     companion object {

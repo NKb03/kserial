@@ -34,10 +34,10 @@ internal class BinaryInput(private val input: DataInput) : Input {
 
     private val clsNameCache = HashMap<Int, String>()
 
-    private fun readClass(prefix: Int): Class<Any> {
+    private fun readClass(context: SerialContext, prefix: Int): Class<Any> {
         val name = readClassName(prefix)
         try {
-            return Class.forName(name) as Class<Any>
+            return context.loadClass(name) as Class<Any>
         } catch (cnf: ClassNotFoundException) {
             throw SerializationException("Could not find serialized class '$name'", cnf)
         }
@@ -179,13 +179,13 @@ internal class BinaryInput(private val input: DataInput) : Input {
     }
 
     private fun readObjectUnshared(ctx: SerialContext, prefix: Int): Any {
-        val cls = readClass(prefix)
+        val cls = readClass(ctx, prefix)
         return readObjectUnshared(ctx, cls)
     }
 
     private fun readObjectShared(ctx: SerialContext, prefix: Int): Any {
         val id = input.readInt()
-        val cls = readClass(prefix)
+        val cls = readClass(ctx, prefix)
         return readObjectShared(ctx, cls, id)
     }
 
