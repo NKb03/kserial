@@ -89,7 +89,7 @@ class SerialContext(private val modules: Set<SerializationModule>, private val u
             if (useUnsafe) {
                 unsafe.allocateInstance(cls.java) as T
             } else {
-                throw SerializationException("Classes implementing InplaceSerializer must have a nullary constructor")
+                throw SerializationException("Classes with an InplaceSerializer must have a nullary constructor")
             }
         }
     }
