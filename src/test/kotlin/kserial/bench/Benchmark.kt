@@ -25,13 +25,13 @@ internal object Benchmark {
     private class KSerialStrategy(private val factory: KSerial, private val context: SerialContext) :
         SerializationStrategy {
         override fun write(out: OutputStream, obj: Any) {
-            val output = factory.createOutput(out)
-            output.writeObject(obj, context)
+            val output = factory.createOutput(out, context)
+            output.writeObject(obj)
         }
 
         override fun read(input: InputStream) {
-            val inp = factory.createInput(input)
-            inp.readObject(context)
+            val inp = factory.createInput(input, context)
+            inp.readObject()
         }
 
         override val name: String

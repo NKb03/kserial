@@ -63,12 +63,12 @@ interface Input : AutoCloseable {
      * @param context the [SerialContext] that is used to instantiate serializers
      * @throws SerializationException if an untyped object was written
      */
-    fun readObject(context: SerialContext): Any?
+    fun readObject(): Any?
 
     /**
      * Read an object that was written **untyped** with [Output.writeObject]
      * * If `null` was written this function returns `null`
      * @param context the [SerialContext] that is used to instantiate serializers
      */
-    fun <T : Any> readObject(cls: Class<T>, context: SerialContext): T?
+    fun <T : Any> readObject(cls: Class<T>): T?
 }

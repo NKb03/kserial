@@ -25,7 +25,7 @@ abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceS
     override fun serialize(obj: T, output: Output, context: SerialContext) {
         for (p in adapterProperties) {
             val v = p.get(this, obj)
-            output.writeObject(v, context, p.isTypeFinal)
+            output.writeObject(v, p.isTypeFinal)
         }
     }
 
@@ -50,8 +50,8 @@ abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceS
     override fun deserialize(obj: T, input: Input, context: SerialContext) {
         for (p in adapterProperties) {
             val v =
-                if (p.isTypeFinal) input.readObject(p.forceClsType(), context)
-                else input.readObject(context)
+                if (p.isTypeFinal) input.readObject(p.forceClsType())
+                else input.readObject()
             p.set(this, obj, v)
         }
     }

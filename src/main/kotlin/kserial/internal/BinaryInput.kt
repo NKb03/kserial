@@ -29,12 +29,12 @@ import java.util.logging.Level.SEVERE
 import java.util.logging.Logger
 import kotlin.reflect.KClass
 
-internal class BinaryInput(private val input: DataInput) : Input {
+internal class BinaryInput(private val input: DataInput, private val context: SerialContext) : Input {
     private val cache = HashMap<Int, Any>()
 
     private val clsNameCache = HashMap<Int, String>()
 
-    private fun readClass(context: SerialContext, prefix: Int): Class<Any> {
+    private fun readClass(prefix: Int): Class<Any> {
         val name = readClassName(prefix)
         try {
             return context.loadClass(name) as Class<Any>
@@ -113,7 +113,7 @@ internal class BinaryInput(private val input: DataInput) : Input {
         input.readUTF()
     }
 
-    override fun readObject(context: SerialContext): Any? {
+    override fun readObject(): Any? {
         val prefix = input.readByte().toInt()
         if (prefix < 0) return readPrimitive(prefix)
         if (isUntyped(prefix)) {
@@ -122,19 +122,18 @@ internal class BinaryInput(private val input: DataInput) : Input {
         return when {
             isNull(prefix)  -> null
             isRef(prefix)   -> readRef()
-            isShare(prefix) -> readObjectShared(context, prefix)
-            else            -> readObjectUnshared(context, prefix)
+            isShare(prefix) -> readObjectShared(prefix)
+            else            -> readObjectUnshared(prefix)
         }
     }
 
-    override fun <T : Any> readObject(cls: Class<T>, context: SerialContext): T? {
-        val o = readObjectImpl(cls, context)
+    override fun <T : Any> readObject(cls: Class<T>): T? {
+        val o = readObjectImpl(cls)
         return o as T?
     }
 
     private fun <T : Any> readObjectImpl(
-        cls: Class<T>,
-        context: SerialContext
+        cls: Class<T>
     ): Any? {
         val kt = cls.kotlin
         if (kt.isPrimitive) return readPrimitive(kt)
@@ -145,9 +144,9 @@ internal class BinaryInput(private val input: DataInput) : Input {
             isRef(prefix)   -> readRef()
             isShare(prefix) -> {
                 val id = input.readInt()
-                readObjectShared(context, anyCls, id)
+                readObjectShared(anyCls, id)
             }
-            else            -> readObjectUnshared(context, anyCls)
+            else            -> readObjectUnshared(anyCls)
         }
     }
 
@@ -178,15 +177,15 @@ internal class BinaryInput(private val input: DataInput) : Input {
         else     -> throw SerializationException("Expected primitive type prefix but got $type")
     }
 
-    private fun readObjectUnshared(ctx: SerialContext, prefix: Int): Any {
-        val cls = readClass(ctx, prefix)
-        return readObjectUnshared(ctx, cls)
+    private fun readObjectUnshared(prefix: Int): Any {
+        val cls = readClass(prefix)
+        return readObjectUnshared(cls)
     }
 
-    private fun readObjectShared(ctx: SerialContext, prefix: Int): Any {
+    private fun readObjectShared(prefix: Int): Any {
         val id = input.readInt()
-        val cls = readClass(ctx, prefix)
-        return readObjectShared(ctx, cls, id)
+        val cls = readClass(prefix)
+        return readObjectShared(cls, id)
     }
 
     private fun readRef(): Any {
@@ -194,7 +193,7 @@ internal class BinaryInput(private val input: DataInput) : Input {
         return cache[id] ?: throw SerializationException("Did not find object ref with id $id")
     }
 
-    private fun readObjectShared(context: SerialContext, cls: Class<Any>, id: Int): Any {
+    private fun readObjectShared(cls: Class<Any>, id: Int): Any {
         val kt = cls.kotlin
         val ser = context.getSerializer(kt)
         return when (ser) {
@@ -215,7 +214,7 @@ internal class BinaryInput(private val input: DataInput) : Input {
         }
     }
 
-    private fun readObjectUnshared(context: SerialContext, cls: Class<Any>): Any {
+    private fun readObjectUnshared(cls: Class<Any>): Any {
         val kt = cls.kotlin
         val serializer = context.getSerializer(kt)
         return when (serializer) {
@@ -239,7 +238,7 @@ internal class BinaryInput(private val input: DataInput) : Input {
     }
 
     companion object {
-        fun fromStream(stream: InputStream) = BinaryInput(DataInputStream(stream))
+        fun fromStream(stream: InputStream, context: SerialContext) = BinaryInput(DataInputStream(stream), context)
 
         val logger: Logger = Logger.getLogger(BinaryInput::class.java.name)
 

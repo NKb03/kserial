@@ -13,13 +13,13 @@ open class FormatSerializer<in T : Any>(private val f: SerialFormat<T>) : Inplac
     override fun serialize(obj: T, output: Output, context: SerialContext) {
         for (lens in f.lenses) {
             val v = lens.get(obj)
-            output.writeObject(v, context)
+            output.writeObject(v)
         }
     }
 
     override fun deserialize(obj: T, input: Input, context: SerialContext) {
         for (lens in f.lenses) {
-            val v = input.readObject(context)
+            val v = input.readObject()
             lens.set(obj, v)
         }
     }

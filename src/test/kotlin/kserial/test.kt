@@ -13,13 +13,13 @@ import java.io.ByteArrayOutputStream
 data class Car(val engine: Engine, val brand: Brand) {
     companion object : Serializer<Car> {
         override fun serialize(obj: Car, output: Output, context: SerialContext) {
-            output.writeObject(obj.brand, context)
-            output.writeObject(obj.engine, context)
+            output.writeObject(obj.brand)
+            output.writeObject(obj.engine)
         }
 
         override fun deserialize(cls: Class<Car>, input: Input, context: SerialContext): Car {
-            val brand = input.readTyped<Brand>(context)!!
-            val engine = input.readTyped<Engine>(context)!!
+            val brand = input.readTyped<Brand>(context)
+            val engine = input.readTyped<Engine>(context)
             return Car(engine, brand)
         }
     }
@@ -50,10 +50,10 @@ fun SpecBody.testSerialization(
     val clsName = testCase?.javaClass?.name ?: "null"
     describe("serializing a $clsName") {
         val baos = ByteArrayOutputStream()
-        val output = KSerial.createOutput(baos)
-        output.writeObject(testCase, ctx)
-        val input = KSerial.createInput(baos.toByteArray())
-        val obj: Any? = input.readObject(ctx)
+        val output = KSerial.createOutput(baos, ctx)
+        output.writeObject(testCase)
+        val input = KSerial.createInput(baos.toByteArray(), ctx)
+        val obj: Any? = input.readObject()
         test("the read object should equal the original object") {
             if (obj?.javaClass?.isArray == true) {
                 assertArrayEquals(obj, testCase)

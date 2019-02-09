@@ -28,7 +28,8 @@ import java.util.logging.Logger
 internal class BinaryOutput(
     private val out: DataOutput,
     sharingMode: SharingMode = Unshared,
-    private val shareClassNames: Boolean = true
+    private val shareClassNames: Boolean = true,
+    private val context: SerialContext
 ) : Output {
     private val cache = sharingMode.createCache()
 
@@ -83,13 +84,13 @@ internal class BinaryOutput(
         out.writeUTF(str)
     }
 
-    override fun writeObject(obj: Any?, context: SerialContext, untyped: Boolean) {
+    override fun writeObject(obj: Any?, untyped: Boolean) {
         val cachedId = cache?.get(obj)
         when {
             obj == null          -> writeNull()
             obj.isPrimitiveValue -> writePrimitive(obj)
             cachedId != null     -> writeObjectRef(cachedId)
-            else                 -> writeObjectNotNull(obj, untyped, context)
+            else                 -> writeObjectNotNull(obj, untyped)
         }
     }
 
@@ -111,15 +112,14 @@ internal class BinaryOutput(
 
     private fun writeObjectNotNull(
         obj: Any,
-        untyped: Boolean,
-        context: SerialContext
+        untyped: Boolean
     ) {
         val name = obj.javaClass.name
         val clsId = clsNameCache[name]
         writePrefix(untyped, clsId)
         shareObject(obj)
         if (!untyped) writeClass(clsId, name)
-        implWriteObject(obj, context)
+        implWriteObject(obj)
     }
 
     private fun writePrefix(untyped: Boolean, clsId: Int?) {
@@ -160,7 +160,7 @@ internal class BinaryOutput(
         out.writeInt(cachedId)
     }
 
-    private fun implWriteObject(obj: Any, context: SerialContext) {
+    private fun implWriteObject(obj: Any) {
         val serializer = context.getSerializer(obj::class)
         when (serializer) {
             is InplaceSerializer<*> -> (serializer as InplaceSerializer<Any>).serialize(obj, this, context)

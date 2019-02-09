@@ -39,9 +39,9 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
         val args = parameters.associate { param ->
             val v = if (param.hasFinalType) {
                 val type = param.type.classifier as KClass<*>
-                input.readObject(type.java, context)
+                input.readObject(type.java)
             } else {
-                input.readObject(context)
+                input.readObject()
             }
             param to v
         }

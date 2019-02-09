@@ -25,6 +25,6 @@ interface Output: AutoCloseable {
 
     fun writeString(str: String)
 
-    fun writeObject(obj: Any?, context: SerialContext, untyped: Boolean = false)
+    fun writeObject(obj: Any?, untyped: Boolean = false)
 }
 

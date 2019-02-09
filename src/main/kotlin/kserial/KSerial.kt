@@ -19,14 +19,14 @@ class KSerial private constructor(
     /**
      * Create an [Input] reading from the specified [stream]
      */
-    fun createInput(stream: InputStream): Input =
-        BinaryInput(DataInputStream(stream))
+    fun createInput(stream: InputStream, context: SerialContext): Input =
+        BinaryInput(DataInputStream(stream), context)
 
     /**
      * Create an [Output] writing to the specified [stream]
      */
-    fun createOutput(stream: OutputStream): Output {
-        return BinaryOutput(DataOutputStream(stream), sharingMode, shareClsNames)
+    fun createOutput(stream: OutputStream, context: SerialContext): Output {
+        return BinaryOutput(DataOutputStream(stream), sharingMode, shareClsNames, context)
     }
 
     /**
