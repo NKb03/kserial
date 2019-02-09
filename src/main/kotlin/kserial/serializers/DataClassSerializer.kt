@@ -31,7 +31,7 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
 
     override fun serialize(obj: T, output: Output, context: SerialContext) {
         for (field in dataFields) {
-            writeField(field, obj, output, context)
+            writeField(field, obj, output)
         }
     }
 

@@ -27,7 +27,6 @@ import java.io.*
 import java.util.logging.ConsoleHandler
 import java.util.logging.Level.SEVERE
 import java.util.logging.Logger
-import kotlin.reflect.KClass
 
 internal class BinaryInput(private val input: DataInput, private val context: SerialContext) : Input {
     private val cache = HashMap<Int, Any>()
@@ -135,8 +134,7 @@ internal class BinaryInput(private val input: DataInput, private val context: Se
     private fun <T : Any> readObjectImpl(
         cls: Class<T>
     ): Any? {
-        val kt = cls.kotlin
-        if (kt.isPrimitive) return readPrimitive(kt)
+        if (cls.isPrimitive) return readPrimitive(cls)
         val prefix = input.readByte().toInt()
         val anyCls = cls as Class<Any>
         return when {
@@ -150,17 +148,17 @@ internal class BinaryInput(private val input: DataInput, private val context: Se
         }
     }
 
-    private fun readPrimitive(type: KClass<*>): Any = when (type) {
-        Byte::class    -> readByte()
-        Boolean::class -> readBoolean()
-        Char::class    -> readChar()
-        Short::class   -> readShort()
-        Int::class     -> readInt()
-        Long::class    -> readLong()
-        Float::class   -> readFloat()
-        Double::class  -> readDouble()
-        String::class  -> readString()
-        else           -> throw AssertionError("Non primitive class passed to readPrimitive")
+    private fun readPrimitive(type: Class<*>): Any = when (type) {
+        Byte::class.java    -> readByte()
+        Boolean::class.java -> readBoolean()
+        Char::class.java    -> readChar()
+        Short::class.java   -> readShort()
+        Int::class.java     -> readInt()
+        Long::class.java    -> readLong()
+        Float::class.java   -> readFloat()
+        Double::class.java  -> readDouble()
+        String::class.java  -> readString()
+        else                -> throw AssertionError("Non primitive class passed to readPrimitive")
     }
 
     private fun readPrimitive(type: Int): Any = when (type) {

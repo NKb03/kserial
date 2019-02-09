@@ -17,7 +17,7 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
     private fun writeFields(context: SerialContext, cls: Class<Any>, obj: Any, output: Output) {
         val fields = getFields(cls)
         for (f in fields) {
-            writeField(f, obj, output, context)
+            writeField(f, obj, output)
         }
     }
 
@@ -31,7 +31,7 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
         val cls = obj.javaClass
         val fields = getFields(cls)
         for (f in fields) {
-            readField(f, input, context, obj)
+            readField(f, input, obj)
         }
     }
 }

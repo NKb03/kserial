@@ -9,8 +9,7 @@ internal object Impl {
     fun writeField(
         f: Field,
         obj: Any,
-        output: Output,
-        context: SerialContext
+        output: Output
     ) {
         try {
             f.isAccessible = true
@@ -25,7 +24,6 @@ internal object Impl {
     fun readField(
         f: Field,
         input: Input,
-        context: SerialContext,
         obj: Any
     ) {
         try {
