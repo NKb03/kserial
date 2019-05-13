@@ -4,8 +4,6 @@ import kotlin.reflect.*
 
 internal val Any.isPrimitiveValue get() = javaClass.isPrimitive
 
-val x = Any().javaClass.kotlin
-
 internal fun KProperty<*>.forceClsType() =
     (returnType.classifier as KClass<*>).java
 

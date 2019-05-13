@@ -193,8 +193,7 @@ internal class BinaryInput(private val input: DataInput, private val context: Se
 
     private fun readObjectShared(cls: Class<Any>, id: Int): Any {
         val kt = cls.kotlin
-        val ser = context.getSerializer(kt)
-        return when (ser) {
+        return when (val ser = context.getSerializer(kt)) {
             is InplaceSerializer<*> -> {
                 val obj = context.createInstance(kt)
                 cache[id] = obj
@@ -214,8 +213,7 @@ internal class BinaryInput(private val input: DataInput, private val context: Se
 
     private fun readObjectUnshared(cls: Class<Any>): Any {
         val kt = cls.kotlin
-        val serializer = context.getSerializer(kt)
-        return when (serializer) {
+        return when (val serializer = context.getSerializer(kt)) {
             is InplaceSerializer<*> -> {
                 val obj = context.createInstance(kt)
                 val cast = serializer as InplaceSerializer<Any>

@@ -54,7 +54,7 @@ fun KSerial.createInput(arr: ByteArray, context: SerialContext) = createInput(By
 /**
  * Read a "typed-written" object and safely cast it to [T]
  */
-inline fun <reified T : Any> Input.readTyped(context: SerialContext): T {
+inline fun <reified T : Any> Input.readTyped(): T {
     val obj = readObject()
     return obj as T
 }
@@ -62,4 +62,4 @@ inline fun <reified T : Any> Input.readTyped(context: SerialContext): T {
 /**
  * Read a "untyped-written" object of type [T]
  */
-inline fun <reified T : Any> Input.readUntyped(context: SerialContext): T? = readObject(T::class.java)
+inline fun <reified T : Any> Input.readUntyped(): T? = readObject(T::class.java)

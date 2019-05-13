@@ -18,8 +18,8 @@ data class Car(val engine: Engine, val brand: Brand) {
         }
 
         override fun deserialize(cls: Class<Car>, input: Input, context: SerialContext): Car {
-            val brand = input.readTyped<Brand>(context)
-            val engine = input.readTyped<Engine>(context)
+            val brand = input.readTyped<Brand>()
+            val engine = input.readTyped<Engine>()
             return Car(engine, brand)
         }
     }
