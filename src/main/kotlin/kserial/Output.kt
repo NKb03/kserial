@@ -4,7 +4,9 @@
 
 package kserial
 
-interface Output: AutoCloseable {
+interface Output : AutoCloseable {
+    val context: SerialContext
+
     fun writeNull()
 
     fun writeByte(byte: Byte)

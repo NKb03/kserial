@@ -12,6 +12,8 @@ package kserial
  * * All [java.io.IOException]'s are wrapped in a [SerializationException] before being rethrown
  */
 interface Input : AutoCloseable {
+    val context: SerialContext
+
     /**
      * Read a byte, that was written with [Output.writeByte]
      */

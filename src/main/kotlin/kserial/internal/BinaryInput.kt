@@ -28,7 +28,7 @@ import java.util.logging.ConsoleHandler
 import java.util.logging.Level.SEVERE
 import java.util.logging.Logger
 
-internal class BinaryInput(private val input: DataInput, private val context: SerialContext) : Input {
+internal class BinaryInput(private val input: DataInput, override val context: SerialContext) : Input {
     private val cache = HashMap<Int, Any>()
 
     private val clsNameCache = HashMap<Int, String>()

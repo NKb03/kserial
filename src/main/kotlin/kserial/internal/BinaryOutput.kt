@@ -29,7 +29,7 @@ internal class BinaryOutput(
     private val out: DataOutput,
     sharingMode: SharingMode = Unshared,
     private val shareClassNames: Boolean = true,
-    private val context: SerialContext
+    override val context: SerialContext
 ) : Output {
     private val cache = sharingMode.createCache()
 
