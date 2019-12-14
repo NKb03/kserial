@@ -54,7 +54,7 @@ fun KSerial.createInput(arr: ByteArray, context: SerialContext) = createInput(By
 /**
  * Read a "typed-written" object and safely cast it to [T]
  */
-inline fun <reified T : Any> Input.readTyped(): T {
+inline fun <reified T> Input.readTyped(): T {
     val obj = readObject()
     return obj as T
 }
@@ -63,3 +63,11 @@ inline fun <reified T : Any> Input.readTyped(): T {
  * Read a "untyped-written" object of type [T]
  */
 inline fun <reified T : Any> Input.readUntyped(): T? = readObject(T::class.java)
+
+@Suppress("UNCHECKED_CAST")
+fun Input.readInplace(obj: Any) {
+    val ser = context.getSerializer(obj::class)
+    if (ser !is InplaceSerializer<*>) throw SerializationException("No inplace serializer found")
+    ser as InplaceSerializer<Any>
+    ser.deserialize(obj, this, context)
+}
