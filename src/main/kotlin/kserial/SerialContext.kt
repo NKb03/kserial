@@ -4,6 +4,7 @@
 
 package kserial
 
+import kserial.internal.AdapterSerializerImpl
 import kserial.internal.DefaultModule
 import kserial.serializers.*
 import sun.misc.Unsafe
@@ -28,11 +29,25 @@ class SerialContext(
         return null
     }
 
+    private inline fun <reified A : Annotation> findAnnotationInHierarchy(cls: KClass<*>): A? {
+        cls.findAnnotation<A>()?.let { return it }
+        for (st in cls.allSuperclasses) {
+            cls.findAnnotation<A>()?.let { return it }
+        }
+        return null
+    }
+
     private fun findSerializerByAnnotation(cls: KClass<*>): Any? {
-        val annotation = cls.findAnnotation<SerializableWith>() ?: return null
+        val annotation = findAnnotationInHierarchy<SerializableWith>(cls) ?: return null
         val serializerCls = annotation.serializerCls
         checkSerializerCls(serializerCls, cls)
         return serializerCls.objectInstance ?: serializerCls.createInstance()
+    }
+
+    private fun findAdapterSerializer(cls: KClass<*>): Any? {
+        val ann = findAnnotationInHierarchy<UseAdapter>(cls) ?: return null
+        val adapter = ann.adapterCls
+        return AdapterSerializerImpl(adapter)
     }
 
     private fun checkSerializerCls(serializerCls: KClass<*>, cls: KClass<*>) {
@@ -106,6 +121,7 @@ class SerialContext(
             ?: enumSerializer(cls)
             ?: objectArraySerializer(cls.java)
             ?: findSerializerByAnnotation(cls)
+            ?: findAdapterSerializer(cls)
             ?: companionSerializer(cls)
             ?: dataClassSerializer(cls)
             ?: DefaultSerializer
