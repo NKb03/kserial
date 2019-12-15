@@ -84,7 +84,15 @@ internal class BinaryOutput(
         out.writeUTF(str)
     }
 
-    override fun writeObject(obj: Any?, untyped: Boolean) {
+    override fun writeObject(obj: Any?) {
+        writeObject(obj, untyped = false)
+    }
+
+    override fun writeUntyped(obj: Any) {
+        writeObject(obj, untyped = true)
+    }
+
+    private fun writeObject(obj: Any?, untyped: Boolean) {
         val cachedId = cache?.get(obj)
         when {
             obj == null          -> writeNull()

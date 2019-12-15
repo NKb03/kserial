@@ -9,7 +9,7 @@ abstract class CompoundSerializer<T : Any> : InplaceSerializer<T> {
 
     override fun serialize(obj: T, output: Output, context: SerialContext) {
         for (comp in components(obj)) {
-            output.writeObject(comp)
+            output.writeUntyped(comp)
         }
     }
 

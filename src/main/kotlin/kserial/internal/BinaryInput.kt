@@ -126,6 +126,16 @@ internal class BinaryInput(private val input: DataInput, override val context: S
         }
     }
 
+    override fun readInplace(obj: Any) {
+        val prefix = input.readByte().toInt()
+        if (prefix < 0) throw SerializationException("Cannot read primitive object inplace")
+        if (!isUntyped(prefix)) throw SerializationException("readInplace expects untyped object")
+        val ser = context.getSerializer(obj::class)
+        if (ser !is InplaceSerializer<*>) throw SerializationException("readInplace expects inplace serializer")
+        ser as InplaceSerializer<Any>
+        ser.deserialize(obj, this, context)
+    }
+
     override fun <T : Any> readObject(cls: Class<T>): T? {
         val o = readObjectImpl(cls)
         return o as T?

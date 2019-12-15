@@ -2,7 +2,6 @@
  * @author Nikolaus Knop
  */
 
-@file:Suppress("UNCHECKED_CAST")
 
 package kserial
 
@@ -73,4 +72,10 @@ interface Input : AutoCloseable {
      * @param context the [SerialContext] that is used to instantiate serializers
      */
     fun <T : Any> readObject(cls: Class<T>): T?
+
+    /**
+     * Reads an object that was written **untyped** with [Output.writeObject]
+     * Uses an [InplaceSerializer] to deserialize the data to the given [obj]
+     */
+    fun readInplace(obj: Any)
 }

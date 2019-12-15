@@ -9,7 +9,7 @@ interface CompoundSerializable : Serializable {
 
     override fun serialize(output: Output, context: SerialContext) {
         for (comp in components()) {
-            output.writeObject(comp)
+            output.writeUntyped(comp)
         }
     }
 

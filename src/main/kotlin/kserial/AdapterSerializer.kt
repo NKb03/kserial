@@ -25,7 +25,8 @@ abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceS
     override fun serialize(obj: T, output: Output, context: SerialContext) {
         for (p in adapterProperties) {
             val v = p.get(this, obj)
-            output.writeObject(v, untyped = p.isTypeFinal)
+            if (p.isTypeFinal) output.writeUntyped(p)
+            else output.writeObject(v)
         }
     }
 

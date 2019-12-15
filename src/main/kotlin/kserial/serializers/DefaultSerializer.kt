@@ -11,10 +11,10 @@ import java.lang.reflect.Modifier
 internal object DefaultSerializer : InplaceSerializer<Any> {
     override fun serialize(obj: Any, output: Output, context: SerialContext) {
         val cls = obj.javaClass
-        writeFields(context, cls, obj, output)
+        writeFields(cls, obj, output)
     }
 
-    private fun writeFields(context: SerialContext, cls: Class<Any>, obj: Any, output: Output) {
+    private fun writeFields(cls: Class<Any>, obj: Any, output: Output) {
         val fields = getFields(cls)
         for (f in fields) {
             writeField(f, obj, output)

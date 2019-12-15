@@ -14,8 +14,9 @@ internal object Impl {
         try {
             f.isAccessible = true
             val v = f.get(obj)
-            val untyped = Modifier.isFinal(f.type.modifiers)
-            output.writeObject(v, untyped)
+            val final = Modifier.isFinal(f.type.modifiers)
+            if (final) output.writeUntyped(v)
+            else output.writeObject(v)
         } catch (t: Throwable) {
             throw SerializationException("Exception while writing $f", t)
         }
