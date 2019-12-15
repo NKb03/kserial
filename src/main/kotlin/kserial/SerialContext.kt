@@ -8,18 +8,18 @@ import kserial.internal.AdapterSerializerImpl
 import kserial.internal.DefaultModule
 import kserial.serializers.*
 import sun.misc.Unsafe
-import kotlin.reflect.KClass
-import kotlin.reflect.KTypeProjection
+import kotlin.reflect.*
 import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 
-class SerialContext(
-    private val modules: Set<SerializationModule>,
-    private val useUnsafe: Boolean,
+open class SerialContext(
+    private val modules: Set<SerializationModule> = setOf(DefaultModule),
+    private val useUnsafe: Boolean = false,
     private val classLoader: ClassLoader
 ) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
+    private val cachedConstructors = mutableMapOf<KClass<*>, KFunction<*>?>()
 
     private fun getCustomizedSerializer(cls: KClass<*>): Any? {
         for (module in modules) {
@@ -94,16 +94,18 @@ class SerialContext(
         else DataClassSerializer(cls)
 
     @Suppress("UNCHECKED_CAST")
-    internal fun <T : Any> getSerializer(cls: KClass<out T>): Any {
+    open fun <T : Any> getSerializer(cls: KClass<out T>): Any {
         return cachedSerializers.getOrPut(cls) { createSerializer(cls) }
     }
 
     @Suppress("UNCHECKED_CAST")
-    internal fun <T : Any> createInstance(cls: KClass<T>): T {
-        val nullary = cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
+    open fun <T : Any> createInstance(cls: KClass<T>): T {
+        val nullary = cachedConstructors.getOrPut(cls) {
+            cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
+        }
         return if (nullary != null) {
             nullary.isAccessible = true
-            nullary.callBy(emptyMap())
+            nullary.callBy(emptyMap()) as T
         } else {
             if (useUnsafe) {
                 unsafe.allocateInstance(cls.java) as T
@@ -113,7 +115,7 @@ class SerialContext(
         }
     }
 
-    internal fun loadClass(name: String) = Class.forName(name, true, classLoader)
+    open fun loadClass(name: String) = Class.forName(name, true, classLoader)
 
     private fun createSerializer(cls: KClass<*>): Any {
         return getCustomizedSerializer(cls)

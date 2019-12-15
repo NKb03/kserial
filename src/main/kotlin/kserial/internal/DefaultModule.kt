@@ -3,7 +3,7 @@ package kserial.internal
 import kserial.SerializationModule
 import kserial.serializers.*
 
-internal object DefaultModule: SerializationModule() {
+object DefaultModule : SerializationModule() {
     init {
         register(BooleanArraySerializer)
         register(ByteArraySerializer)
