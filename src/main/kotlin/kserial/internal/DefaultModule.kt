@@ -15,5 +15,6 @@ object DefaultModule : SerializationModule() {
         register(FloatArraySerializer)
         register(DoubleArraySerializer)
         register(DateSerializer)
+        register(StringSerializer)
     }
 }
