@@ -63,3 +63,23 @@ inline fun <reified T> Input.readTyped(): T {
  * Read a "untyped-written" object of type [T]
  */
 inline fun <reified T : Any> Input.readUntyped(): T? = readObject(T::class.java)
+
+inline fun <reified T> readObject(path: Path): T {
+    val serial = KSerial.newInstance()
+    val context = SerialContext.newInstance {
+        classLoader = T::class.java.classLoader
+        useUnsafe = true
+    }
+    val input = serial.createInput(path, context)
+    return input.readObject() as T
+}
+
+inline fun <reified T> writeObject(path: Path, obj: T) {
+    val serial = KSerial.newInstance()
+    val context = SerialContext.newInstance {
+        classLoader = T::class.java.classLoader
+        useUnsafe = true
+    }
+    val output = serial.createOutput(path, context)
+    output.writeObject(obj)
+}

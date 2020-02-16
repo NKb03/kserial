@@ -42,6 +42,10 @@ data class X(val i: Int) {
     val x = this
 }
 
+class Outer {
+    class Inner
+}
+
 fun SpecBody.testSerialization(
     testCase: Any?,
     KSerial: KSerial,

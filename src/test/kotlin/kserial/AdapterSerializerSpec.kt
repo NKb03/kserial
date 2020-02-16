@@ -49,6 +49,7 @@ internal object AdapterSerializerSpec : Spek({
         }
         val context = SerialContext.newInstance {
             install(module)
+            classLoader = AdapterSerializerSpec::class.java.classLoader
         }
         testSerialization(data, factory, context)
     }

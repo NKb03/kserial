@@ -40,12 +40,14 @@ internal object DefaultSerializerSpec : Spek({
             )
             add(X(123))
             add(666)
+            add(Outer.Inner())
         }
     }
 
     fun Spec.execute(kserial: KSerial) {
         given("a default serial context") {
             val ctx = SerialContext.newInstance {
+                classLoader = DefaultSerializerSpec::class.java.classLoader
                 useUnsafe = true
             }
             for (testCase in testCases) {
