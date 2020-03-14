@@ -1,19 +1,25 @@
 buildscript {
+    repositories {
+        jcenter()
+    }
+
     dependencies {
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.17"
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
 }
 
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.50'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.70'
 }
 
 apply plugin: 'org.jetbrains.dokka'
-apply plugin: 'maven-publish'
+apply plugin: 'com.bmuschko.nexus'
 
-group 'org.nikok'
-version '1.1.2'
+archivesBaseName = 'kserial'
+group 'com.github.nkb03'
+version '0.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -22,21 +28,11 @@ repositories {
 }
 
 static String kotlin(Object dep) {
-    return "org.jetbrains.kotlin:kotlin-$dep:1.3.50"
+    return "org.jetbrains.kotlin:kotlin-$dep:1.3.70"
 }
 
 static String spek(Object dep) {
     return "org.jetbrains.spek:spek-$dep:1.1.5"
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    from sourceSets.main.kotlin
-    classifier = 'sources'
-}
-
-task javadocJar(type: Jar) {
-    from dokka
-    classifier = "javadoc"
 }
 
 dokka {
@@ -50,21 +46,41 @@ dokka {
     noStdlibLink = false
 }
 
-sourceSets {
-    samples {
-        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
-        runtimeClasspath += sourceSets.main.runtimeClasspath
+modifyPom {
+    project {
+        name 'kserial'
+        description 'Yet another serialization library for the JVM'
+        url 'https://github.com/nkb03/kserial'
+        inceptionYear '2020'
+
+        scm {
+            url 'https://github.com/nkb03/kserial'
+            connection 'git:https://github.com/nkb03/kserial.git'
+            developerConnection 'git:git://github.com/nkb03/kserial.git'
+        }
+
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'santaclaus'
+                name 'Nikolaus Knop'
+                email 'niko.knop003@gmail.com'
+            }
+        }
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from(components.java)
-            artifact sourcesJar
-            artifact javadocJar
-        }
-    }
+extraArchive {
+    sources = true
+    tests = true
+    javadoc = true
 }
 
 dependencies {
@@ -77,7 +93,7 @@ dependencies {
     }
     testImplementation "com.natpryce:hamkrest:1.5.0.0"
     implementation kotlin("reflect")
-    compile kotlin("stdlib-jdk8")
+    implementation kotlin("stdlib-jdk8")
 }
 
 compileKotlin {
