@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.70'
+    id 'maven-publish'
 }
 
 apply plugin: 'org.jetbrains.dokka'
@@ -19,7 +20,7 @@ apply plugin: 'com.bmuschko.nexus'
 
 archivesBaseName = 'kserial'
 group 'com.github.nkb03'
-version '0.1-SNAPSHOT'
+version '0.2-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -44,6 +45,26 @@ dokka {
     reportUndocumented = true
     impliedPlatforms = ["JVM"]
     noStdlibLink = false
+}
+
+task sourcesJar_(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar_(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar_
+            artifact javadocJar_
+        }
+    }
 }
 
 modifyPom {
