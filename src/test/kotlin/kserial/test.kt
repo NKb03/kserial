@@ -12,12 +12,12 @@ import java.io.ByteArrayOutputStream
 
 data class Car(val engine: Engine, val brand: Brand) {
     companion object : Serializer<Car> {
-        override fun serialize(obj: Car, output: Output, context: SerialContext) {
+        override fun serialize(obj: Car, output: Output) {
             output.writeObject(obj.brand)
             output.writeObject(obj.engine)
         }
 
-        override fun deserialize(cls: Class<Car>, input: Input, context: SerialContext): Car {
+        override fun deserialize(cls: Class<Car>, input: Input): Car {
             val brand = input.readTyped<Brand>()
             val engine = input.readTyped<Engine>()
             return Car(engine, brand)

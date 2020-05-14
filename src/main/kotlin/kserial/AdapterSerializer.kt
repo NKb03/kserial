@@ -22,7 +22,7 @@ abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceS
      */
     constructor(cls: KClass<T>) : this(cls.starProjectedType)
 
-    override fun serialize(obj: T, output: Output, context: SerialContext) {
+    override fun serialize(obj: T, output: Output) {
         for (p in adapterProperties) {
             val v = p.get(this, obj)
             if (p.isTypeFinal) output.writeUntyped(p)
@@ -48,7 +48,7 @@ abstract class AdapterSerializer<in T : Any>(private val type: KType) : InplaceS
             }
     }
 
-    override fun deserialize(obj: T, input: Input, context: SerialContext) {
+    override fun deserialize(obj: T, input: Input) {
         for (p in adapterProperties) {
             val v =
                 if (p.isTypeFinal) input.readObject(p.forceClsType())

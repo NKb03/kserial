@@ -2,7 +2,7 @@ package kserial.internal
 
 import kotlin.reflect.*
 
-internal val Any.isPrimitiveValue get() = javaClass.isPrimitive
+internal val Any.isPrimitiveValue get() = this::class.javaPrimitiveType != null
 
 internal fun KProperty<*>.forceClsType() =
     (returnType.classifier as KClass<*>).java

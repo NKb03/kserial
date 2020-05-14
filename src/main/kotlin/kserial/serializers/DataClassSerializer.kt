@@ -29,13 +29,13 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
         prop.javaField ?: throw AssertionError("No javaField for data class property found")
     }
 
-    override fun serialize(obj: T, output: Output, context: SerialContext) {
+    override fun serialize(obj: T, output: Output) {
         for (field in dataFields) {
             writeField(field, obj, output)
         }
     }
 
-    override fun deserialize(cls: Class<T>, input: Input, context: SerialContext): T {
+    override fun deserialize(cls: Class<T>, input: Input): T {
         val args = parameters.associate { param ->
             val v = if (param.hasFinalType) {
                 val type = param.type.classifier as KClass<*>

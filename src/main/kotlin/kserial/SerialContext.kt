@@ -16,7 +16,7 @@ import kotlin.reflect.jvm.isAccessible
 open class SerialContext(
     private val modules: Set<SerializationModule> = setOf(DefaultModule),
     private val useUnsafe: Boolean = false,
-    private val classLoader: ClassLoader
+    private val classLoader: ClassLoader = Thread.currentThread().contextClassLoader
 ) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
     private val cachedConstructors = mutableMapOf<KClass<*>, KFunction<*>?>()
@@ -115,7 +115,7 @@ open class SerialContext(
         }
     }
 
-    open fun loadClass(name: String) = Class.forName(name, true, classLoader)
+    open fun loadClass(name: String): Class<*> = Class.forName(name, true, classLoader)
 
     private fun createSerializer(cls: KClass<*>): Any {
         return getCustomizedSerializer(cls)
@@ -134,7 +134,7 @@ open class SerialContext(
 
         var useUnsafe = false
 
-        lateinit var classLoader: ClassLoader
+        var classLoader: ClassLoader = Thread.currentThread().contextClassLoader
 
         init {
             install(DefaultModule)
@@ -149,7 +149,7 @@ open class SerialContext(
     }
 
     companion object {
-        private val unsafe by lazy { unsafeField.get(null) as Unsafe }
+        val unsafe by lazy { unsafeField.get(null) as Unsafe }
 
         private val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe").also {
             it.isAccessible = true

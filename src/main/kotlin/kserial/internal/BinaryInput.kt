@@ -133,7 +133,7 @@ internal class BinaryInput(private val input: DataInput, override val context: S
         val ser = context.getSerializer(obj::class)
         if (ser !is InplaceSerializer<*>) throw SerializationException("readInplace expects inplace serializer")
         ser as InplaceSerializer<Any>
-        ser.deserialize(obj, this, context)
+        ser.deserialize(obj, this)
     }
 
     override fun <T : Any> readObject(cls: Class<T>): T? {
@@ -208,12 +208,12 @@ internal class BinaryInput(private val input: DataInput, override val context: S
                 val obj = context.createInstance(kt)
                 cache[id] = obj
                 val cast = ser as InplaceSerializer<Any>
-                cast.deserialize(obj, this, context)
+                cast.deserialize(obj, this)
                 obj
             }
             is Serializer<*>        -> {
                 val cast = ser as Serializer<Any>
-                val obj = cast.deserialize(cls, this, context)
+                val obj = cast.deserialize(cls, this)
                 cache[id] = obj
                 obj
             }
@@ -227,10 +227,10 @@ internal class BinaryInput(private val input: DataInput, override val context: S
             is InplaceSerializer<*> -> {
                 val obj = context.createInstance(kt)
                 val cast = serializer as InplaceSerializer<Any>
-                cast.deserialize(obj, this, context)
+                cast.deserialize(obj, this)
                 obj
             }
-            is Serializer<*>        -> (serializer as Serializer<Any>).deserialize(cls, this, context)
+            is Serializer<*>        -> (serializer as Serializer<Any>).deserialize(cls, this)
             else                    -> unexpectedSerializer()
         }
     }

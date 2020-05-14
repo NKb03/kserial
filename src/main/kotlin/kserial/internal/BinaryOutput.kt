@@ -170,8 +170,8 @@ internal class BinaryOutput(
 
     private fun implWriteObject(obj: Any) {
         when (val serializer = context.getSerializer(obj::class)) {
-            is InplaceSerializer<*> -> (serializer as InplaceSerializer<Any>).serialize(obj, this, context)
-            is Serializer<*>        -> (serializer as Serializer<Any>).serialize(obj, this, context)
+            is InplaceSerializer<*> -> (serializer as InplaceSerializer<Any>).serialize(obj, this)
+            is Serializer<*>        -> (serializer as Serializer<Any>).serialize(obj, this)
             else                    -> throw AssertionError("Object returned by getSerializer is not a serializer")
         }
     }

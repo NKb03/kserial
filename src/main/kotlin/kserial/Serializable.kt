@@ -11,10 +11,10 @@ interface Serializable {
     /**
      * Write this object to given [output].
      */
-    fun serialize(output: Output, context: SerialContext)
+    fun serialize(output: Output)
 
     /**
      * Read properties of this object from the given [input].
      */
-    fun deserialize(input: Input, context: SerialContext)
+    fun deserialize(input: Input)
 }

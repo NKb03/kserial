@@ -21,7 +21,7 @@ class AdapterSerializerImpl(adapterCls: KClass<*>) : InplaceSerializer<Any> {
         constr.isAccessible = true
     }
 
-    override fun serialize(obj: Any, output: Output, context: SerialContext) {
+    override fun serialize(obj: Any, output: Output) {
         val adapter = constr.call(obj)
         for (prop in properties) {
             val value = prop.get(adapter)
@@ -29,7 +29,7 @@ class AdapterSerializerImpl(adapterCls: KClass<*>) : InplaceSerializer<Any> {
         }
     }
 
-    override fun deserialize(obj: Any, input: Input, context: SerialContext) {
+    override fun deserialize(obj: Any, input: Input) {
         val adapter = constr.call(obj)
         for (prop in properties) {
             val value = input.readObject()
