@@ -4,6 +4,7 @@ import kserial.*
 import kserial.internal.Impl.readField
 import kserial.internal.Impl.writeField
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 
 internal object DefaultSerializer : InplaceSerializer<Any> {
     override fun serialize(obj: Any, output: Output) {
@@ -22,7 +23,11 @@ internal object DefaultSerializer : InplaceSerializer<Any> {
         val fields = mutableListOf<Field>()
         var c: Class<*>? = cls
         while (c != null) {
-            fields.addAll(c.declaredFields.asList())
+            for (f in c.declaredFields) {
+                if (!Modifier.isStatic(f.modifiers)) {
+                    fields.add(f)
+                }
+            }
             c = c.superclass
         }
         return fields
