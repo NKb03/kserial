@@ -4,8 +4,12 @@
 
 package kserial
 
+import bundles.Bundle
+
 interface Output : AutoCloseable {
     val context: SerialContext
+
+    val bundle: Bundle
 
     fun writeNull()
 

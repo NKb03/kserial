@@ -6,6 +6,8 @@
 
 package kserial.internal
 
+import bundles.Bundle
+import bundles.createBundle
 import kserial.*
 import kserial.SharingMode.Unshared
 import kserial.internal.PrefixByte.BYTE_T
@@ -31,6 +33,8 @@ internal class BinaryOutput(
     private val shareClassNames: Boolean = true,
     override val context: SerialContext
 ) : Output {
+    override val bundle: Bundle = createBundle()
+
     private val cache = sharingMode.createCache()
 
     private val clsNameCache = HashMap<String, Int>()

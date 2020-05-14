@@ -5,13 +5,23 @@
 
 package kserial
 
+import bundles.Bundle
+
 /**
  * This interface implements and input for the [SFTS serialization format](file://D:\Bibliotheken\Aktive Projekte\kserial\docs\sfts.html)
  * * Unless otherwise noted all functions of this interface can throw a [SerializationException]
  * * All [java.io.IOException]'s are wrapped in a [SerializationException] before being rethrown
  */
 interface Input : AutoCloseable {
+    /**
+     * The [SerialContext] associated with this [Input]
+     */
     val context: SerialContext
+
+    /**
+     * A [Bundle] of extra properties that can be used during deserialization.
+     */
+    val bundle: Bundle
 
     /**
      * Read a byte, that was written with [Output.writeByte]
@@ -61,7 +71,6 @@ interface Input : AutoCloseable {
     /**
      * Read an object that was written **typed** with [Output.writeObject]
      * * If `null` was written this function returns `null`
-     * @param context the [SerialContext] that is used to instantiate serializers
      * @throws SerializationException if an untyped object was written
      */
     fun readObject(): Any?
@@ -69,7 +78,6 @@ interface Input : AutoCloseable {
     /**
      * Read an object that was written **untyped** with [Output.writeObject]
      * * If `null` was written this function returns `null`
-     * @param context the [SerialContext] that is used to instantiate serializers
      */
     fun <T : Any> readObject(cls: Class<T>): T?
 

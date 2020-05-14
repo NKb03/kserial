@@ -6,6 +6,8 @@
 
 package kserial.internal
 
+import bundles.Bundle
+import bundles.createBundle
 import kserial.*
 import kserial.internal.PrefixByte.BYTE_T
 import kserial.internal.PrefixByte.CHAR_T
@@ -32,6 +34,8 @@ internal class BinaryInput(private val input: DataInput, override val context: S
     private val cache = HashMap<Int, Any>()
 
     private val clsNameCache = HashMap<Int, String>()
+
+    override val bundle: Bundle = createBundle()
 
     private fun readClass(prefix: Int): Class<Any> {
         val name = readClassName(prefix)
@@ -205,7 +209,7 @@ internal class BinaryInput(private val input: DataInput, override val context: S
         val kt = cls.kotlin
         return when (val ser = context.getSerializer(kt)) {
             is InplaceSerializer<*> -> {
-                val obj = context.createInstance(kt)
+                val obj = context.createInstance(kt, bundle)
                 cache[id] = obj
                 val cast = ser as InplaceSerializer<Any>
                 cast.deserialize(obj, this)
@@ -225,7 +229,7 @@ internal class BinaryInput(private val input: DataInput, override val context: S
         val kt = cls.kotlin
         return when (val serializer = context.getSerializer(kt)) {
             is InplaceSerializer<*> -> {
-                val obj = context.createInstance(kt)
+                val obj = context.createInstance(kt, bundle)
                 val cast = serializer as InplaceSerializer<Any>
                 cast.deserialize(obj, this)
                 obj

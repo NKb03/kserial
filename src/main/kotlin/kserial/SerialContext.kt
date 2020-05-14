@@ -4,6 +4,8 @@
 
 package kserial
 
+import bundles.Bundle
+import bundles.createBundle
 import kserial.internal.AdapterSerializerImpl
 import kserial.serializers.*
 import sun.misc.Unsafe
@@ -21,10 +23,10 @@ open class SerialContext private constructor(
     private val classLoader: ClassLoader,
     private val customSerializers: Map<KClass<*>, Serializer<*>>,
     private val customInPlaceSerializers: Map<KClass<*>, InplaceSerializer<*>>,
-    private val customConstructors: Map<KClass<*>, (KClass<*>) -> Any>
+    private val customConstructors: Map<KClass<*>, (Bundle, KClass<*>) -> Any>
 ) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
-    private val cachedConstructors = mutableMapOf<KClass<*>, ((KClass<*>) -> Any)?>()
+    private val cachedConstructors = mutableMapOf<KClass<*>, ((Bundle, KClass<*>) -> Any)?>()
 
     private inline fun <reified A : Annotation> findAnnotationInHierarchy(cls: KClass<*>): A? {
         cls.findAnnotation<A>()?.let { return it }
@@ -110,7 +112,7 @@ open class SerialContext private constructor(
         return cachedSerializers.getOrPut(cls) { createSerializer(cls) }
     }
 
-    private fun getCustomConstructor(cls: KClass<*>): ((KClass<*>) -> Any)? {
+    private fun getCustomConstructor(cls: KClass<*>): ((Bundle, KClass<*>) -> Any)? {
         customConstructors[cls]?.let { return it }
         for (c in cls.superclasses) {
             getCustomConstructor(c)?.let { return it }
@@ -123,20 +125,20 @@ open class SerialContext private constructor(
      * or by unsafely allocating a new object if [useUnsafe] is active.
      */
     @Suppress("UNCHECKED_CAST")
-    open fun <T : Any> createInstance(cls: KClass<T>): T {
+    open fun <T : Any> createInstance(cls: KClass<T>, bundle: Bundle = createBundle()): T {
         val constructor = cachedConstructors.getOrPut(cls) {
             val custom = getCustomConstructor(cls)
             val cstr = cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
             when {
                 custom != null -> custom
-                cstr != null   -> { _ ->
+                cstr != null   -> { _, _ ->
                     cstr.isAccessible = true
                     cstr.callBy(emptyMap())
                 }
                 else           -> null
             }
         }
-        val obj = if (constructor != null) constructor(cls) else allocateInstance(cls)
+        val obj = if (constructor != null) constructor(bundle, cls) else allocateInstance(cls)
         return obj as T
     }
 
@@ -179,7 +181,7 @@ open class SerialContext private constructor(
 
         private val customInPlaceSerializers = mutableMapOf<KClass<*>, InplaceSerializer<*>>()
 
-        private val customConstructors = mutableMapOf<KClass<*>, (KClass<*>) -> Any>()
+        private val customConstructors = mutableMapOf<KClass<*>, (Bundle, KClass<*>) -> Any>()
 
         /**
          * Register the given [serializer] for objects of the given class.
@@ -214,15 +216,15 @@ open class SerialContext private constructor(
          * The [constructor] takes the class of which an instance is to be created and creates such an instance.
          */
         @Suppress("UNCHECKED_CAST")
-        fun <T : Any> registerConstructor(cls: KClass<T>, constructor: (KClass<out T>) -> T) {
-            customConstructors[cls] = constructor as (KClass<*>) -> Any
+        fun <T : Any> registerConstructor(cls: KClass<T>, constructor: (Bundle, KClass<out T>) -> T) {
+            customConstructors[cls] = constructor as (Bundle, KClass<*>) -> Any
         }
 
         /**
          * Register the given constructor for the specified and all of its subclasses.
          * The [constructor] takes the class of which an instance is to be created and creates such an instance.
          */
-        inline fun <reified T : Any> registerConstructor(noinline constructor: (KClass<out T>) -> T) {
+        inline fun <reified T : Any> registerConstructor(noinline constructor: (Bundle, KClass<out T>) -> T) {
             registerConstructor(T::class, constructor)
         }
 

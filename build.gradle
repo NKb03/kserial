@@ -25,6 +25,7 @@ version '0.2-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -105,7 +106,8 @@ extraArchive {
 }
 
 dependencies {
-    implementation kotlin("stdlib")
+    implementation kotlin("stdlib-jdk8")
+    implementation 'com.github.nkb03:bundles:0.1-SNAPSHOT'
     testImplementation(spek("api")) {
         exclude group: "org.jetbrains.kotlin"
     }
@@ -114,7 +116,6 @@ dependencies {
     }
     testImplementation "com.natpryce:hamkrest:1.5.0.0"
     implementation kotlin("reflect")
-    implementation kotlin("stdlib-jdk8")
 }
 
 compileKotlin {
