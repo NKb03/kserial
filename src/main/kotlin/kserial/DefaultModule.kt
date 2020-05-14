@@ -1,8 +1,10 @@
-package kserial.internal
+package kserial
 
-import kserial.SerializationModule
 import kserial.serializers.*
 
+/**
+ * The default module registers serializers for primitive types and arrays.
+ */
 object DefaultModule : SerializationModule() {
     init {
         register(BooleanArraySerializer)
@@ -16,7 +18,5 @@ object DefaultModule : SerializationModule() {
         register(DoubleArraySerializer)
         register(DateSerializer)
         register(StringSerializer)
-        register(ListSerializer)
-        register(SetSerializer)
     }
 }

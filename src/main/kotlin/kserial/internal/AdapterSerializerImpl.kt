@@ -11,7 +11,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 
-class AdapterSerializerImpl(adapterCls: KClass<*>) : InplaceSerializer<Any> {
+internal class AdapterSerializerImpl(adapterCls: KClass<*>) : InplaceSerializer<Any> {
     private val constr = adapterCls.primaryConstructor ?: error("Adapter class $adapterCls has no primary constructor")
 
     private val properties =

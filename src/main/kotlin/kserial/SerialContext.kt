@@ -5,7 +5,6 @@
 package kserial
 
 import kserial.internal.AdapterSerializerImpl
-import kserial.internal.DefaultModule
 import kserial.serializers.*
 import sun.misc.Unsafe
 import kotlin.reflect.*
@@ -13,6 +12,9 @@ import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 
+/**
+ * The serial context is used to resolve serializers for objects
+ */
 open class SerialContext(
     private val modules: Set<SerializationModule> = setOf(DefaultModule),
     private val useUnsafe: Boolean = false,
@@ -93,11 +95,17 @@ open class SerialContext(
         if (!cls.isData) null
         else DataClassSerializer(cls)
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Return the appropriate serializer for the given class
+     */
     open fun <T : Any> getSerializer(cls: KClass<out T>): Any {
         return cachedSerializers.getOrPut(cls) { createSerializer(cls) }
     }
 
+    /**
+     * Return a new instance of the given class either by calling a nullary-constructor
+     * or by unsafely allocating a new object if [useUnsafe] is active.
+     */
     @Suppress("UNCHECKED_CAST")
     open fun <T : Any> createInstance(cls: KClass<T>): T {
         val nullary = cachedConstructors.getOrPut(cls) {
@@ -115,6 +123,9 @@ open class SerialContext(
         }
     }
 
+    /**
+     * Load the class with the given name. By default this just uses the passed [classLoader].
+     */
     open fun loadClass(name: String): Class<*> = Class.forName(name, true, classLoader)
 
     private fun createSerializer(cls: KClass<*>): Any {
@@ -129,18 +140,29 @@ open class SerialContext(
             ?: DefaultSerializer
     }
 
+    /**
+     * Builder object for serial contexts
+     */
     class Builder @PublishedApi internal constructor() {
         private val modules = mutableSetOf<SerializationModule>()
 
+        /**
+         * Controls whether the [Unsafe] object may be used for allocating objects. Defaults to `false`.
+         */
         var useUnsafe = false
 
+        /**
+         * The class loader used for loading classes. By default this is the context class loader of the current thread.
+         */
         var classLoader: ClassLoader = Thread.currentThread().contextClassLoader
 
         init {
             install(DefaultModule)
         }
 
-
+        /**
+         * Install the given serialization module. By default only the [DefaultModule] is installed.
+         */
         fun install(module: SerializationModule) {
             modules.add(module)
         }
@@ -149,12 +171,15 @@ open class SerialContext(
     }
 
     companion object {
-        val unsafe by lazy { unsafeField.get(null) as Unsafe }
+        private val unsafe by lazy { unsafeField.get(null) as Unsafe }
 
         private val unsafeField = Unsafe::class.java.getDeclaredField("theUnsafe").also {
             it.isAccessible = true
         }
 
+        /**
+         * Create a new serial context using a [Builder]
+         */
         inline fun newInstance(block: Builder.() -> Unit) = Builder().apply(block).build()
     }
 }

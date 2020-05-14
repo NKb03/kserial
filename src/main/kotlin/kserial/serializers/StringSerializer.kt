@@ -6,7 +6,7 @@ package kserial.serializers
 
 import kserial.*
 
-object StringSerializer : Serializer<String> {
+internal object StringSerializer : Serializer<String> {
     override fun serialize(obj: String, output: Output) {
         output.writeString(obj)
     }
