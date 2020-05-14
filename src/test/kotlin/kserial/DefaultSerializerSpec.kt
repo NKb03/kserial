@@ -47,7 +47,6 @@ internal object DefaultSerializerSpec : Spek({
     fun Spec.execute(kserial: KSerial) {
         given("a default serial context") {
             val ctx = SerialContext.newInstance {
-                classLoader = DefaultSerializerSpec::class.java.classLoader
                 useUnsafe = true
             }
             for (testCase in testCases) {

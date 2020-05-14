@@ -13,7 +13,6 @@ internal object DataClassSerializerSpec : Spek({
     given("a default serial context") {
         val ctx = SerialContext.newInstance {
             useUnsafe = true
-            classLoader = DataClassSerializerSpec::class.java.classLoader
         }
         val factory = KSerial.newInstance {
             shareClsNames = true

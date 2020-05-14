@@ -7,7 +7,8 @@ package kserial
 import kserial.internal.AdapterSerializerImpl
 import kserial.serializers.*
 import sun.misc.Unsafe
-import kotlin.reflect.*
+import kotlin.reflect.KClass
+import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
@@ -15,21 +16,15 @@ import kotlin.reflect.jvm.isAccessible
 /**
  * The serial context is used to resolve serializers for objects
  */
-open class SerialContext(
-    private val modules: Set<SerializationModule> = setOf(DefaultModule),
-    private val useUnsafe: Boolean = false,
-    private val classLoader: ClassLoader = Thread.currentThread().contextClassLoader
+open class SerialContext private constructor(
+    private val useUnsafe: Boolean,
+    private val classLoader: ClassLoader,
+    private val customSerializers: Map<KClass<*>, Serializer<*>>,
+    private val customInPlaceSerializers: Map<KClass<*>, InplaceSerializer<*>>,
+    private val customConstructors: Map<KClass<*>, (KClass<*>) -> Any>
 ) {
     private val cachedSerializers = mutableMapOf<KClass<*>, Any>()
-    private val cachedConstructors = mutableMapOf<KClass<*>, KFunction<*>?>()
-
-    private fun getCustomizedSerializer(cls: KClass<*>): Any? {
-        for (module in modules) {
-            val ser = module.getSerializer(cls)
-            if (ser != null) return ser
-        }
-        return null
-    }
+    private val cachedConstructors = mutableMapOf<KClass<*>, ((KClass<*>) -> Any)?>()
 
     private inline fun <reified A : Annotation> findAnnotationInHierarchy(cls: KClass<*>): A? {
         cls.findAnnotation<A>()?.let { return it }
@@ -91,6 +86,19 @@ open class SerialContext(
         }
     }
 
+    private fun <T : Any> getCustomSerializer(cls: KClass<T>): Any? {
+        customSerializers[cls]?.let { return it }
+        return getInplaceSerializer(cls)
+    }
+
+    private fun <T : Any> getInplaceSerializer(cls: KClass<T>): Any? {
+        customInPlaceSerializers[cls]?.let { return it }
+        for (superCls in cls.superclasses) {
+            getInplaceSerializer(superCls)?.let { return it }
+        }
+        return null
+    }
+
     private fun dataClassSerializer(cls: KClass<*>): DataClassSerializer<*>? =
         if (!cls.isData) null
         else DataClassSerializer(cls)
@@ -102,26 +110,39 @@ open class SerialContext(
         return cachedSerializers.getOrPut(cls) { createSerializer(cls) }
     }
 
+    private fun getCustomConstructor(cls: KClass<*>): ((KClass<*>) -> Any)? {
+        customConstructors[cls]?.let { return it }
+        for (c in cls.superclasses) {
+            getCustomConstructor(c)?.let { return it }
+        }
+        return null
+    }
+
     /**
      * Return a new instance of the given class either by calling a nullary-constructor
      * or by unsafely allocating a new object if [useUnsafe] is active.
      */
     @Suppress("UNCHECKED_CAST")
     open fun <T : Any> createInstance(cls: KClass<T>): T {
-        val nullary = cachedConstructors.getOrPut(cls) {
-            cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
-        }
-        return if (nullary != null) {
-            nullary.isAccessible = true
-            nullary.callBy(emptyMap()) as T
-        } else {
-            if (useUnsafe) {
-                unsafe.allocateInstance(cls.java) as T
-            } else {
-                throw SerializationException("Classes with an InplaceSerializer must have a nullary constructor")
+        val constructor = cachedConstructors.getOrPut(cls) {
+            val custom = getCustomConstructor(cls)
+            val cstr = cls.constructors.find { c -> c.parameters.all { p -> p.isOptional } }
+            when {
+                custom != null -> custom
+                cstr != null   -> { _ ->
+                    cstr.isAccessible = true
+                    cstr.callBy(emptyMap())
+                }
+                else           -> null
             }
         }
+        val obj = if (constructor != null) constructor(cls) else allocateInstance(cls)
+        return obj as T
     }
+
+    private fun allocateInstance(cls: KClass<*>) =
+        if (useUnsafe) unsafe.allocateInstance(cls.java)
+        else throw SerializationException("Classes with an InplaceSerializer must have a nullary constructor")
 
     /**
      * Load the class with the given name. By default this just uses the passed [classLoader].
@@ -129,7 +150,7 @@ open class SerialContext(
     open fun loadClass(name: String): Class<*> = Class.forName(name, true, classLoader)
 
     private fun createSerializer(cls: KClass<*>): Any {
-        return getCustomizedSerializer(cls)
+        return getCustomSerializer(cls)
             ?: serializableSerializer(cls)
             ?: enumSerializer(cls)
             ?: objectArraySerializer(cls.java)
@@ -144,8 +165,6 @@ open class SerialContext(
      * Builder object for serial contexts
      */
     class Builder @PublishedApi internal constructor() {
-        private val modules = mutableSetOf<SerializationModule>()
-
         /**
          * Controls whether the [Unsafe] object may be used for allocating objects. Defaults to `false`.
          */
@@ -156,18 +175,74 @@ open class SerialContext(
          */
         var classLoader: ClassLoader = Thread.currentThread().contextClassLoader
 
-        init {
-            install(DefaultModule)
+        private val customSerializers = mutableMapOf<KClass<*>, Serializer<*>>()
+
+        private val customInPlaceSerializers = mutableMapOf<KClass<*>, InplaceSerializer<*>>()
+
+        private val customConstructors = mutableMapOf<KClass<*>, (KClass<*>) -> Any>()
+
+        /**
+         * Register the given [serializer] for objects of the given class.
+         */
+        fun <T : Any> register(cls: KClass<T>, serializer: Serializer<T>) {
+            customSerializers[cls] = serializer
         }
 
         /**
-         * Install the given serialization module. By default only the [DefaultModule] is installed.
+         * Register the given [serializer] for objects of the given class and its subclasses.
          */
-        fun install(module: SerializationModule) {
-            modules.add(module)
+        fun <T : Any> register(cls: KClass<T>, serializer: InplaceSerializer<T>) {
+            customInPlaceSerializers[cls] = serializer
         }
 
-        @PublishedApi internal fun build(): SerialContext = SerialContext(modules, useUnsafe, classLoader)
+        /**
+         * Register the given [serializer] for objects of the given class.
+         */
+        inline fun <reified T : Any> register(serializer: Serializer<T>) {
+            register(T::class, serializer)
+        }
+
+        /**
+         * Register the given [serializer] for objects of the given class and its subclasses.
+         */
+        inline fun <reified T : Any> register(serializer: InplaceSerializer<T>) {
+            register(T::class, serializer)
+        }
+
+        /**
+         * Register the given constructor for the specified and all of its subclasses.
+         * The [constructor] takes the class of which an instance is to be created and creates such an instance.
+         */
+        @Suppress("UNCHECKED_CAST")
+        fun <T : Any> registerConstructor(cls: KClass<T>, constructor: (KClass<out T>) -> T) {
+            customConstructors[cls] = constructor as (KClass<*>) -> Any
+        }
+
+        /**
+         * Register the given constructor for the specified and all of its subclasses.
+         * The [constructor] takes the class of which an instance is to be created and creates such an instance.
+         */
+        inline fun <reified T : Any> registerConstructor(noinline constructor: (KClass<out T>) -> T) {
+            registerConstructor(T::class, constructor)
+        }
+
+        init {
+            register(BooleanArraySerializer)
+            register(ByteArraySerializer)
+            register(BooleanArraySerializer)
+            register(CharArraySerializer)
+            register(ShortArraySerializer)
+            register(IntArraySerializer)
+            register(LongArraySerializer)
+            register(FloatArraySerializer)
+            register(DoubleArraySerializer)
+            register(DateSerializer)
+            register(StringSerializer)
+        }
+
+
+        @PublishedApi internal fun build(): SerialContext =
+            SerialContext(useUnsafe, classLoader, customSerializers, customInPlaceSerializers, customConstructors)
     }
 
     companion object {
