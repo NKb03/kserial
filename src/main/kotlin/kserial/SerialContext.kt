@@ -231,7 +231,6 @@ open class SerialContext private constructor(
         init {
             register(BooleanArraySerializer)
             register(ByteArraySerializer)
-            register(BooleanArraySerializer)
             register(CharArraySerializer)
             register(ShortArraySerializer)
             register(IntArraySerializer)
@@ -240,6 +239,7 @@ open class SerialContext private constructor(
             register(DoubleArraySerializer)
             register(DateSerializer)
             register(StringSerializer)
+            register(MapSerializer)
         }
 
 

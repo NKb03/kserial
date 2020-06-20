@@ -7,7 +7,7 @@ internal object PrefixByte {
     private const val NUL = 0b1
     private const val REF = 0b10
     private const val SHARE = 0b100
-    private const val TYPED = 0b1000
+    private const val UNTYPED = 0b1000
     private const val CLS_SHARE = 0b10000
     private const val CLS_REF = 0b1000000
 
@@ -17,7 +17,7 @@ internal object PrefixByte {
 
     fun isShare(b: Int) = b and SHARE > 0
 
-    fun isUntyped(b: Int) = b and TYPED > 0
+    fun isUntyped(b: Int) = b and UNTYPED > 0
 
     fun isClsShare(b: Int) = b and CLS_SHARE > 0
 
@@ -34,7 +34,7 @@ internal object PrefixByte {
         val n = if (nul) NUL else 0
         val r = if (ref) REF else 0
         val s = if (share) SHARE else 0
-        val t = if (untyped) TYPED else 0
+        val t = if (untyped) UNTYPED else 0
         val cs = if (clsShare) CLS_SHARE else 0
         val cr = if (clsRef) CLS_REF else 0
         return n or r or s or t or cs or cr

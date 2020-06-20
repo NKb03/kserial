@@ -36,14 +36,14 @@ internal class DataClassSerializer<T : Any>(private val cls: KClass<T>) : Serial
     }
 
     override fun deserialize(cls: Class<T>, input: Input): T {
-        val args = parameters.associate { param ->
+        val args = parameters.associateWith { param ->
             val v = if (param.hasFinalType) {
                 val type = param.type.classifier as KClass<*>
                 input.readObject(type.java)
             } else {
                 input.readObject()
             }
-            param to v
+            v
         }
         primaryConstructor.isAccessible = true
         return primaryConstructor.callBy(args)
