@@ -20,4 +20,3 @@ javadoc
 src/main/resources/
 src/samples/
 src/test/resources/
-gradle.properties
