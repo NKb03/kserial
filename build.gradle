@@ -11,13 +11,13 @@ buildscript {
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.10'
-    id 'hextant-library' version '0.1-SNAPSHOT'
+    id 'com.github.nkb03.hextant-library' version '0.1-SNAPSHOT'
     id 'io.codearte.nexus-staging' version '0.21.2'
 }
 group 'com.github.nkb03'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -54,10 +54,9 @@ dependencies {
     }
     testImplementation "com.natpryce:hamkrest:1.5.0.0"
 }
-Ena
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
